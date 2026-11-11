@@ -24,6 +24,7 @@ header{background:var(--azul);color:#fff;padding:calc(var(--st) + 6px) 8px 6px;d
 header .tit{flex:1;min-width:0;padding:0 4px}
 header .tit b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header .tit small{display:block;font-size:11px;opacity:.7;letter-spacing:.08em}
+a.ib{color:#fff;text-decoration:none}
 .ib{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:20px}
 .ib:active{background:rgba(255,255,255,.15)}
 .ib[disabled]{opacity:.35}
@@ -188,6 +189,7 @@ nav button.on{color:#fff;background:rgba(255,255,255,.14)}
 
 <script src="/config.js"></script>
 <script src="/nube.js"></script>
+<script src="/pdf.js"></script>
 <script>
 "use strict";
 if(!Nube.requerir())throw new Error("Hay que iniciar sesión");
@@ -736,7 +738,6 @@ $("fImp").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=
   p.id=uid();db.proy.unshift(p);db.cur=p.id;hist=[];rehacer=[];botonesHist();guardar();$("vExp").classList.remove("on");ajustar();aviso("Plano abierto: "+p.nombre,2000)}catch(err){await avisar("Ese archivo no es una copia de ALMARA Planos")}e.target.value=""};
 $("bExp").onclick=()=>abrir("vExp");
 
-const HW=[761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],HBW=[761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,761,278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556];
 // =====================================================================
 // PRESUPUESTOS
 // =====================================================================
@@ -865,38 +866,8 @@ function desdePlano(pr,proy,op){
   const cliP=proy.clienteId&&Nube.clientes().find(c=>c.id===proy.clienteId);if(cliP&&!pr.cliente.nombre)ponerCliente(pr,cliP);
   if(!pr.cliente.nombre&&proy.cliente)pr.cliente.nombre=proy.cliente;
   if(!pr.titulo)pr.titulo="Instalación eléctrica"+(proy.nombre?" · "+proy.nombre:"");
-  pr.plano=proy.id;return sinTarifa}
+  pr.plano=proy.id;if(Array.isArray(pr.planos)&&!pr.planos.includes(proy.id))pr.planos.push(proy.id);return sinTarifa}
 
-// ---------- Generador de PDF propio (Helvetica, A4) ----------
-const CPM={8364:128,8218:130,402:131,8222:132,8230:133,8224:134,8225:135,710:136,8240:137,352:138,8249:139,338:140,381:142,8216:145,8217:146,8220:147,8221:148,8226:149,8211:150,8212:151,732:152,8482:153,353:154,8250:155,339:156,382:158,376:159,8593:94,8595:118};
-function cp(s){let o="";for(const ch of String(s)){let c=ch.codePointAt(0);if(c>=256||(c>=127&&c<160))c=CPM[c]||63;o+=String.fromCharCode(c)}return o}
-const PT=v=>(v*72/25.4).toFixed(2);
-function anchoMM(t,size,bold){const W=bold?HBW:HW;let w=0;for(let i=0;i<t.length;i++)w+=W[t.charCodeAt(i)]||556;return w/1000*size*25.4/72}
-function partir(s,size,bold,max){const out=[];for(const par of String(s).split("\n")){let l="";for(const w of par.split(/\s+/)){const t=l?l+" "+w:w;if(l&&anchoMM(cp(t),size,bold)>max){out.push(l);l=w}else l=t}out.push(l)}return out}
-class MiniPDF{
-  constructor(){this.pags=[];this.img=null;this.nueva()}
-  nueva(){this.c=[];this.pags.push(this.c)}
-  rgb(h){const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255].map(v=>(v/255).toFixed(3)).join(" ")}
-  rect(x,y,w,h,col){this.c.push(`${this.rgb(col)} rg ${PT(x)} ${PT(297-y-h)} ${PT(w)} ${PT(h)} re f`)}
-  linea(x1,y1,x2,y2,col,w){this.c.push(`${this.rgb(col)} RG ${w||.5} w ${PT(x1)} ${PT(297-y1)} m ${PT(x2)} ${PT(297-y2)} l S`)}
-  txt(x,y,s,size,bold,col,al){const t=cp(s),w=anchoMM(t,size,bold),xx=al==="r"?x-w:al==="c"?x-w/2:x;
-    this.c.push(`BT /${bold?"F2":"F1"} ${size} Tf ${this.rgb(col)} rg ${PT(xx)} ${PT(297-y)} Td (${t.replace(/[\\()]/g,m=>"\\"+m)}) Tj ET`);return w}
-  imagen(jpg,pw,ph,x,y,w,h){this.img={jpg,pw,ph};this.c.push(`q ${PT(w)} 0 0 ${PT(h)} ${PT(x)} ${PT(297-y-h)} cm /Im1 Do Q`)}
-  salida(){const ob=[];const add=s=>{ob.push(s);return ob.length};
-    add("<< /Type /Catalog /Pages 2 0 R >>");add("PAGES");
-    add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
-    add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
-    let im=0;if(this.img)im=add(`<< /Type /XObject /Subtype /Image /Width ${this.img.pw} /Height ${this.img.ph} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${this.img.jpg.length} >>\nstream\n${this.img.jpg}\nendstream`);
-    const kids=[];
-    for(const c of this.pags){const s=c.join("\n");const ci=add(`<< /Length ${s.length} >>\nstream\n${s}\nendstream`);
-      kids.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Contents ${ci} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${im?` /XObject << /Im1 ${im} 0 R >>`:""} >> >>`))}
-    ob[1]=`<< /Type /Pages /Kids [${kids.map(k=>k+" 0 R").join(" ")}] /Count ${kids.length} >>`;
-    let out="%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";const off=[];
-    ob.forEach((o,i)=>{off.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`});
-    const xr=out.length;out+=`xref\n0 ${ob.length+1}\n0000000000 65535 f \n`+off.map(o=>String(o).padStart(10,"0")+" 00000 n \n").join("");
-    out+=`trailer\n<< /Size ${ob.length+1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
-    const b=new Uint8Array(out.length);for(let i=0;i<out.length;i++)b[i]=out.charCodeAt(i)&255;return new Blob([b],{type:"application/pdf"})}
-}
 async function firmaJPG(){if(!EMP.firma)return null;const img=new Image();await new Promise((ok,ko)=>{img.onload=ok;img.onerror=ko;img.src=EMP.firma});
   const cv=document.createElement("canvas");cv.width=img.naturalWidth;cv.height=img.naturalHeight;const cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0);
   return{jpg:atob(cv.toDataURL("image/jpeg",.9).split(",")[1]),w:cv.width,h:cv.height}}
@@ -933,6 +904,7 @@ async function pdfPresupuesto(pr){
     pdf.rect(x0,y,74,9,AC);pdf.txt(x0+2,y+6.2,"TOTAL",12,1,BL);pdf.txt(190,y+6.2,eur(total),12,1,BL,"r");y+=13}
   y+=6;
   const cond=[`Presupuesto válido durante ${E.validez||15} días desde su fecha.`,`Desplazamiento incluido en las ${E.zona}.`].concat(pr.notas.filter(n=>n.trim()));
+  const adj=planosDe(pr).map(id=>db.proy.find(p=>p.id===id)).filter(Boolean);if(adj.length)cond.push(adj.length>1?"Se adjuntan los planos de la instalación con la ubicación de cada punto.":"Se adjunta el plano de la instalación con la ubicación de cada punto.");
   const lcond=cond.map(c=>partir("• "+c,8.5,0,174));const hc=6+lcond.flat().length*4.06;
   if(y+hc+30>275){pdf.nueva();cab();y=42}
   pdf.txt(18,y,"CONDICIONES",7.5,1,AC);y+=1;for(const g of lcond)for(const l of g){y+=4.06;pdf.txt(18,y,l,8.5,0,GR)}
@@ -941,7 +913,28 @@ async function pdfPresupuesto(pr){
   const f=await firmaJPG().catch(()=>null);
   if(f){const esc=Math.min(15.5/f.h,53/f.w);pdf.imagen(f.jpg,f.w,f.h,112+wf+5,y+1,f.w*esc,f.h*esc)}
   pdf.linea(18,y+18,98,y+18,GR,.6);pdf.linea(112,y+18,192,y+18,GR,.6);
+  // Planos adjuntos: una página por planta, en horizontal o vertical según la forma del plano
+  for(const proy of adj)for(const pl of proy.plantas){if(!pl.paredes.length&&!pl.items.length&&!pl.cables.length&&!pl.fondo)continue;
+    const im=await planoJPG(pl).catch(()=>null);if(!im)continue;pdf.nueva(im.w>im.h);const W=pdf.W,H=pdf.H;
+    pdf.rect(0,0,W,12,AZ);pdf.txt(12,7.8,"PLANO ADJUNTO · "+proy.nombre+" · "+pl.nombre,9,1,BL);pdf.txt(W-12,7.8,pr.numero,9,0,BL,"r");
+    const e=Math.min((W-20)/im.w,(H-30)/im.h),w=im.w*e,h=im.h*e;pdf.imagen(im.jpg,im.w,im.h,(W-w)/2,16,w,h);
+    pdf.txt(12,H-6,[E.marca,E.telefono,E.email,E.web].filter(Boolean).join(" · "),7.5,0,GR);pdf.txt(W-12,H-6,"Página "+pdf.pags.length,7.5,0,GR,"r")}
   return pdf.salida()}
+function planosDe(pr){const ok=id=>db.proy.some(p=>p.id===id);if(Array.isArray(pr.planos))return pr.planos.filter(ok);
+  const s=new Set();if(pr.plano)s.add(pr.plano);if(pr.clienteId)for(const p of db.proy)if(p.clienteId===pr.clienteId)s.add(p.id);return[...s].filter(ok)}
+async function planoJPG(pl){const fd=pl.fondo?await dataDeImg(pl.fondo.img).catch(()=>null):null;const s=svgExport(pl,fd);
+  const m=s.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/),W=+m[1],H=+m[2],k=Math.min(150,2400/Math.max(W,H));
+  const url=URL.createObjectURL(new Blob([s],{type:"image/svg+xml"}));
+  try{const im=new Image();await new Promise((ok,ko)=>{im.onload=ok;im.onerror=ko;im.src=url});const cv=document.createElement("canvas");cv.width=Math.round(W*k);cv.height=Math.round(H*k);
+    const cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(im,0,0,cv.width,cv.height);
+    return{jpg:atob(cv.toDataURL("image/jpeg",.88).split(",")[1]),w:cv.width,h:cv.height}}finally{URL.revokeObjectURL(url)}}
+let verTodosPl=false;
+function pintarPlanosAdj(){const p=prCur,el=$("planosAdj");if(!p||!el)return;const sel=new Set(planosDe(p));
+  const cand=db.proy.filter(x=>verTodosPl||sel.has(x.id)||x.id===p.plano||(p.clienteId&&x.clienteId===p.clienteId));
+  let h=cand.length?cand.map(x=>{const n=x.plantas.reduce((s,pl)=>s+pl.items.length,0);return`<label class="chk tarjeta" style="margin:0 0 8px!important"><input type="checkbox" data-plan="${x.id}" ${sel.has(x.id)?"checked":""}><span style="flex:1"><b style="display:block;font-size:14px;color:var(--azul)">📐 ${esc(x.nombre)}</b><small style="color:var(--gris)">${x.plantas.length} planta${x.plantas.length>1?"s":""} · ${n} elementos</small></span></label>`}).join("")
+    :`<p class="vacio" style="padding:8px">No hay planos de este cliente.</p>`;
+  if(!verTodosPl&&db.proy.length>cand.length)h+=`<button class="pb" data-pa="todosPl" style="width:100%;padding:10px">Elegir otro plano</button>`;
+  el.innerHTML=h}
 
 // ---------- Interfaz de presupuestos ----------
 function setModo(m){modo=m;$("app").classList.toggle("mpres",m==="pres");
@@ -969,12 +962,13 @@ function editorPres(){const p=prCur;$("nomProy").textContent=p.numero;const c=p.
   <div class="g2"><label>Persona de contacto<input data-c="contacto" value="${esc(c.contacto)}"></label><label>Email<input data-c="email" inputmode="email" value="${esc(c.email)}"></label></div></div>
   <h3>Partidas</h3><div id="partidas"></div>
   <div class="g2 bots"><button class="pb az" data-pa="tarifa">＋ De la tarifa</button><button class="pb" data-pa="plano">▦ Del plano</button><button class="pb" data-pa="libre">＋ Partida libre</button><button class="pb" data-pa="material">＋ Material (coste + margen)</button></div>
+  <h3>Planos adjuntos al PDF</h3><div id="planosAdj"></div>
   <h3>Condiciones del trabajo</h3><div class="caja"><textarea data-f="notas" rows="4" placeholder="Una por línea">${esc(p.notas.join("\n"))}</textarea>
   <small class="ayuda">La validez de ${EMP.validez} días y el desplazamiento incluido ya salen siempre en el PDF.</small></div>
   <div class="g2 bots"><button class="pb" data-pa="duplicar">Duplicar</button><button class="pb rojo" data-pa="borrar">Eliminar presupuesto</button></div>
   <div style="height:90px"></div></div>
   <div class="barraTotal"><div><small id="totLab"></small><b id="totVal"></b></div><button class="pb az" data-pa="pdf">PDF</button></div>`;
-  pintarPartidas()}
+  pintarPartidas();verTodosPl=false;pintarPlanosAdj()}
 function pintarPartidas(){const p=prCur,k=calcular(p);let h="";
   if(!k.filas.length)h=`<p class="vacio">Añade partidas de tu tarifa o cárgalas desde un plano.</p>`;
   for(const f of k.filas)h+=`<div class="part" data-part="${f.x.id}"><div class="pc"><b>${esc(f.c)}</b>${f.d?`<small>${esc(f.d)}</small>`:""}</div>
@@ -983,6 +977,8 @@ function pintarPartidas(){const p=prCur,k=calcular(p);let h="";
   $("partidas").innerHTML=h;
   $("totLab").textContent=k.part?`Base ${eur(k.base)} · IVA ${eur(k.cuota)}`:`Base ${eur(k.base)} + IVA ${eur(k.cuota)}`;
   $("totVal").textContent="Total "+eur(k.total)+(k.part?" (IVA incl.)":"")}
+$("pres").addEventListener("change",e=>{const t=e.target;if(!t.dataset.plan||!prCur)return;
+  prCur.planos=[...document.querySelectorAll("[data-plan]:checked")].map(x=>x.dataset.plan);guardarPres()});
 $("pres").addEventListener("input",e=>{const t=e.target,p=prCur;if(!p)return;
   if(t.dataset.f){if(t.dataset.f==="notas")p.notas=t.value.split("\n");else p[t.dataset.f]=t.value}
   if(t.dataset.c)p.cliente[t.dataset.c]=t.value;
@@ -997,6 +993,7 @@ $("pres").addEventListener("click",async e=>{
   const a=b.dataset.pa;
   if(a==="nuevo"){prCur=nuevoPres();editorPres();return}
   if(a==="elegirCli"){elegirCliente();return}
+  if(a==="todosPl"){verTodosPl=true;pintarPlanosAdj();return}
   if(a==="nuevoPlano"){abrirImport(true);return}
   if(a==="volver"){listaPres();return}
   if(a==="ajustes"){abrirAjustes();return}
