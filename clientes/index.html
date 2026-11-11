@@ -313,7 +313,7 @@ function formTrabajo(t){const n=!t;t=t||{fecha:hoy(),clase:"Instalación",cat:"S
   <div class="g2"><label>Hora de entrada<input id="tHi" type="time" value="${t.horaIni||""}"></label><label>Hora de salida<input id="tHf" type="time" value="${t.horaFin||""}"></label></div>
   <label>Trabajo realizado<textarea id="tD" rows="4" placeholder="Antena en el tejado, soporte de pared, cable 15 m, configuración…">${esc(t.desc)}</textarea></label>
   <label>Equipos instalados (modelo y nº de serie)<textarea id="tE" rows="2" placeholder="TP-Link Deco X50 pack 3 · S/N …">${esc(t.equipos)}</textarea></label>
-  <label>Material utilizado</label><div id="tMat"></div><button class="btn" id="tAddM" style="margin-top:4px">＋ Añadir material</button>
+  <label>Material utilizado</label><datalist id="listaMat">${materialFurgo().items.map(i=>`<option value="${esc(i.nombre)}">`).join("")}</datalist><div id="tMat"></div><button class="btn" id="tAddM" style="margin-top:4px">＋ Añadir material</button>
   <label style="margin-top:14px">Estado</label><div class="seg"><button data-est="terminado" class="${estado==="terminado"?"on":""}">✓ Terminado</button><button data-est="pendiente" class="${estado==="pendiente"?"on":""}">⏳ Pendiente</button></div>
   <label>Observaciones / qué queda pendiente<textarea id="tO" rows="2">${esc(t.obs)}</textarea></label>
   <div class="g2"><label>Importe (€)<input id="tI" type="number" inputmode="decimal" step="any" value="${esc(t.importe)}"></label><label>Nº presupuesto<input id="tP" value="${esc(t.presupuesto)}" placeholder="P-2026-028"></label></div>
@@ -323,7 +323,7 @@ function formTrabajo(t){const n=!t;t=t||{fecha:hoy(),clase:"Instalación",cat:"S
   <label style="margin-top:14px">Conformidad del cliente</label><div id="tFirma"></div>
   <button class="btn az" id="tOk">Guardar parte</button><button class="btn" id="tPdf">📄 Guardar y crear PDF</button>${n?"":`<button class="btn rojo" id="tDel">Eliminar parte</button>`}`);
   const pf=()=>{$("tFotos").innerHTML=fotosTmp.map(f=>`<img data-foto="${f}" alt="">`).join("");pintarFotos()};pf();
-  const pm=()=>{$("tMat").innerHTML=matTmp.length?matTmp.map((m,i)=>`<div class="mat"><input data-mq="${i}" inputmode="decimal" value="${esc(m.q)}" placeholder="Cant."><input data-mc="${i}" value="${esc(m.c)}" placeholder="Material"><button data-mx="${i}">✕</button></div>`).join(""):`<small style="color:var(--gris)">Sin material apuntado.</small>`};pm();
+  const pm=()=>{$("tMat").innerHTML=matTmp.length?matTmp.map((m,i)=>`<div class="mat"><input data-mq="${i}" inputmode="decimal" value="${esc(m.q)}" placeholder="Cant."><input data-mc="${i}" value="${esc(m.c)}" placeholder="Material" list="listaMat"><button data-mx="${i}">✕</button></div>`).join(""):`<small style="color:var(--gris)">Sin material apuntado.</small>`};pm();
   $("tMat").oninput=e=>{const x=e.target;if(x.dataset.mq)matTmp[x.dataset.mq].q=x.value;if(x.dataset.mc)matTmp[x.dataset.mc].c=x.value};
   $("tMat").onclick=e=>{const b=e.target.closest("[data-mx]");if(b){matTmp.splice(+b.dataset.mx,1);pm()}};
   $("tAddM").onclick=()=>{matTmp.push({q:"1",c:""});pm();const ins=document.querySelectorAll("[data-mc]");ins[ins.length-1].focus()};
@@ -332,15 +332,23 @@ function formTrabajo(t){const n=!t;t=t||{fecha:hoy(),clase:"Instalación",cat:"S
     :`<button class="btn" id="tFirmar" style="border:2px dashed var(--borde);background:#fff">✍️ Firma del cliente</button>`;$("tFirmar").onclick=()=>abrirFirma(f=>{firmaTmp=f;pfi()})};pfi();
   $("tAddF").onclick=()=>$("tFile").click();
   $("tFile").onchange=async e=>{aviso("Guardando fotos…",4000);for(const f of e.target.files){try{const b=await comprimir(f),id="f-"+uid();await IDB.set(id,b);Nube.subirFoto(id,b);fotosTmp.push(id)}catch(err){aviso("Una foto no se ha podido guardar",2500)}}e.target.value="";pf();aviso("Fotos añadidas")};
-  const guardarT=()=>{Object.assign(t,{clase:$("tC").value,cat:$("tS").value,fecha:val("tF"),horaIni:val("tHi"),horaFin:val("tHf"),desc:val("tD"),equipos:val("tE"),
+  const guardarT=()=>{const matAntes=(t.material||[]).map(x=>({...x}));Object.assign(t,{clase:$("tC").value,cat:$("tS").value,fecha:val("tF"),horaIni:val("tHi"),horaFin:val("tHf"),desc:val("tD"),equipos:val("tE"),
       material:matTmp.filter(m=>String(m.c).trim()).map(m=>({q:String(m.q).trim(),c:String(m.c).trim()})),estado,obs:val("tO"),importe:val("tI").replace(",","."),presupuesto:val("tP"),garantia:val("tG"),fotos:fotosTmp});
     if(firmaTmp){t.firmaCli=firmaTmp.png;t.firmaNombre=firmaTmp.nombre;t.firmaDni=firmaTmp.dni;t.firmadoEn=firmaTmp.fecha}else{delete t.firmaCli;delete t.firmaNombre;delete t.firmaDni;delete t.firmadoEn}
-    if(!t.numero)t.numero=siguienteParte();if(n&&!t.id){t.id=uid();(cur.trabajos=cur.trabajos||[]).push(t)}tocar(cur)};
+    if(!t.numero)t.numero=siguienteParte();if(n&&!t.id){t.id=uid();(cur.trabajos=cur.trabajos||[]).push(t)}tocar(cur);descontarMaterial(matAntes,t.material,t.numero+" · "+cur.nombre)};
   $("tOk").onclick=()=>{guardarT();cerrarForm();pintar();aviso("Parte "+t.numero+" guardado")};
   $("tPdf").onclick=async()=>{guardarT();aviso("Creando PDF…",8000);try{const b=await pdfParte(cur,t);aviso("");
       await compartir(new File([b],("Parte_"+t.numero+"_"+cur.nombre).replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"_")+".pdf",{type:"application/pdf"}))}catch(err){aviso("");await avisar("No se ha podido crear el PDF")}
     cerrarForm();pintar()};
-  if(!n)$("tDel").onclick=async()=>{if(!await confirmar("¿Eliminar este parte y sus fotos?"))return;for(const f of t.fotos||[]){IDB.del(f).catch(()=>{});Nube.borrarFoto(f)}cur.trabajos=cur.trabajos.filter(x=>x!==t);tocar(cur);cerrarForm();pintar()}}
+  if(!n)$("tDel").onclick=async()=>{if(!await confirmar("¿Eliminar este parte y sus fotos?"))return;descontarMaterial(t.material,[],"Parte eliminado "+(t.numero||""));for(const f of t.fotos||[]){IDB.del(f).catch(()=>{});Nube.borrarFoto(f)}cur.trabajos=cur.trabajos.filter(x=>x!==t);tocar(cur);cerrarForm();pintar()}}
+// Material de la furgoneta: lo apuntado en el parte se descuenta del stock (y se devuelve si se quita)
+function materialFurgo(){try{const m=JSON.parse(localStorage.getItem("almara-material-v1"));if(m&&m.items)return{movs:[],inventarios:[],...m}}catch(e){}return{items:[],movs:[],inventarios:[]}}
+function descontarMaterial(antes,despues,ref){const M=materialFurgo();if(!M.items.length)return;const n=v=>{const x=parseFloat(String(v).replace(",","."));return isFinite(x)?x:0};
+  const buscar=c=>M.items.find(i=>i.nombre.trim().toLowerCase()===String(c||"").trim().toLowerCase());const d={};
+  for(const l of antes||[]){const it=buscar(l.c);if(it)d[it.id]=(d[it.id]||0)+n(l.q)}for(const l of despues||[]){const it=buscar(l.c);if(it)d[it.id]=(d[it.id]||0)-n(l.q)}
+  let ch=0;for(const id in d){const q=Math.round(d[id]*100)/100;if(!q)continue;const it=M.items.find(i=>i.id===id);it.stock=Math.round((it.stock+q)*100)/100;
+    M.movs.unshift({id:uid(),fecha:new Date().toISOString(),itemId:id,q,tipo:"parte",ref});ch++;if(it.min>0&&it.stock<=it.min)aviso("⚠️ Queda poco: "+it.nombre,3000)}
+  if(ch){M.movs=M.movs.slice(0,1000);localStorage.setItem("almara-material-v1",JSON.stringify(M));Nube.marcar("material")}}
 // Firma del cliente con el dedo
 function abrirFirma(listo){const v=$("vFirma"),cv=$("firmaCv"),cx=cv.getContext("2d");v.classList.add("on");
   const r=cv.getBoundingClientRect();cv.width=Math.round(r.width*2);cv.height=Math.round(r.height*2);
