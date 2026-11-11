@@ -54,6 +54,7 @@ h3 .mas{margin-left:auto;color:var(--acento);font-size:13px;letter-spacing:0;tex
 .dato div{flex:1;min-width:0;word-break:break-word;white-space:pre-wrap}
 .trab{cursor:pointer}.trab .top{display:flex;justify-content:space-between;gap:8px}
 .trab small{color:var(--gris);font-size:12.5px}
+.mat{display:grid;grid-template-columns:64px 1fr 36px;gap:6px;margin-bottom:6px}.mat input{margin:0!important}.mat button{background:var(--claro);border-radius:9px;font-weight:700;color:var(--gris)}
 .fotos{display:flex;gap:6px;overflow-x:auto;margin-top:8px}
 .fotos img{width:74px;height:74px;object-fit:cover;border-radius:8px;flex:none;background:var(--claro)}
 .clave{font-family:ui-monospace,Menlo,monospace;letter-spacing:.03em}
@@ -106,10 +107,16 @@ textarea{resize:vertical}
   <input id="dIn" autocomplete="off">
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" id="dNo" style="width:auto;padding:10px 16px;margin:0">Cancelar</button><button class="btn az" id="dOk" style="width:auto;padding:10px 16px;margin:0">Aceptar</button></div>
 </div></div>
+<div class="velo" id="vFirma" style="align-items:stretch;z-index:25"><div class="hoja" style="max-height:none;height:100%;border-radius:0;display:flex;flex-direction:column;padding-top:calc(var(--st) + 14px)">
+  <h2 style="margin-bottom:4px">Firma del cliente</h2><p style="margin:0 0 8px;color:var(--gris);font-size:13px">Firma con el dedo dentro del recuadro. Gira el móvil si necesitas más espacio.</p>
+  <canvas id="firmaCv" style="flex:1;width:100%;min-height:180px;border:2px dashed var(--borde);border-radius:12px;touch-action:none;background:#fff"></canvas>
+  <div class="g2"><label>Nombre de quien firma<input id="fNom"></label><label>DNI (opcional)<input id="fDni"></label></div>
+  <div class="fila2"><button class="btn" id="fBorrar">Borrar</button><button class="btn" id="fCancelar">Cancelar</button><button class="btn az" id="fAceptar">Aceptar</button></div></div></div>
 <div id="visor"><img id="visorImg" alt=""><div class="barra"><button id="visorBorrar">Eliminar foto</button><button id="visorCerrar">Cerrar</button></div></div>
 
 <script src="/config.js"></script>
 <script src="/nube.js"></script>
+<script src="/pdf.js"></script>
 <script>
 "use strict";
 if(!Nube.requerir())throw new Error("Hay que iniciar sesión");
@@ -117,7 +124,7 @@ const LS="almara-clientes-v1";
 const CATS=["Starlink","WiFi","Redes / rack","Videovigilancia","Electricidad","ICT","Otro"];
 const CLASES=["Instalación","Revisión","Avería","Visita","Presupuesto"];
 const COL=["#1E88E5","#2E9D5B","#E8730C","#7B3FA0","#00838F","#C62828","#0B1F3A","#C99A00"];
-let db={clientes:[]}, vista="lista", cur=null, filtro="todos", busq="";
+let volverA="lista", db={clientes:[]}, vista="lista", cur=null, filtro="todos", busq="";
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -158,8 +165,8 @@ const cuando=d=>d<0?`hace ${-d} día${d===-1?"":"s"}`:d===0?"hoy":d===1?"mañana
 
 // ---------- Vistas ----------
 function ir(v,c){vista=v;cur=c||null;pintar();window.scrollTo(0,0)}
-function pintar(){$("bAtras").textContent=vista==="lista"?"⌂":"‹";$("fab").style.display=vista==="lista"?"":"none";
-  if(vista==="lista")pintarLista();else pintarFicha()}
+function pintar(){const top=vista==="lista"||vista==="partes";$("bAtras").textContent=top?"⌂":"‹";$("fab").style.display=vista==="lista"?"":"none";
+  if(vista==="lista")pintarLista();else if(vista==="partes")pintarPartes();else pintarFicha()}
 function pintarLista(){$("titulo").textContent="Clientes";
   const q=busq.toLowerCase();let L=db.clientes.filter(c=>{
     if(filtro==="empresa"&&c.tipo!=="empresa")return false;if(filtro==="particular"&&c.tipo==="empresa")return false;
@@ -167,7 +174,7 @@ function pintarLista(){$("titulo").textContent="Clientes";
     if(q){const txt=[c.nombre,c.contacto,c.tel,c.email,c.dir,c.localidad,c.nif,c.notas,...(c.trabajos||[]).map(t=>t.desc+" "+t.equipos+" "+t.presupuesto)].join(" ").toLowerCase();if(!txt.includes(q))return false}
     return true}).sort((a,b)=>(b.act||"").localeCompare(a.act||""));
   const pen=pendientes();let h=`<input class="buscar" id="busq" placeholder="Buscar nombre, teléfono, pueblo, equipo…" value="${esc(busq)}" type="search">
-  <div class="chips">${[["todos","Todos"],["empresa","Empresas"],["particular","Particulares"],["mant","Con mantenimiento"],...CATS.slice(0,6).map(c=>[c,c])].map(([k,l])=>`<button data-fil="${esc(k)}" class="${filtro===k?"on":""}">${l}</button>`).join("")}</div>`;
+  <div class="chips">${[["todos","Todos"],["empresa","Empresas"],["particular","Particulares"],["mant","Con mantenimiento"],...CATS.slice(0,6).map(c=>[c,c]),["partes","📝 Partes de trabajo"]].map(([k,l])=>`<button data-fil="${esc(k)}" class="${filtro===k?"on":""}">${l}</button>`).join("")}</div>`;
   if(pen.length&&!q&&filtro==="todos")h+=`<div class="alerta"><b>🔔 Mantenimientos próximos</b>${pen.map(p=>`<div class="it" data-cli="${p.c.id}"><span>${esc(p.c.nombre)} · ${p.t}</span><span style="color:${p.d<0?"var(--rojo)":"var(--nar)"};font-weight:700;white-space:nowrap">${cuando(p.d)}</span></div>`).join("")}</div>`;
   h+=`<h3>${L.length} cliente${L.length===1?"":"s"}</h3>`;
   if(!db.clientes.length)h+=`<div class="vacio">Todavía no hay clientes.<br>Pulsa <b>＋ Cliente</b> para crear la primera ficha.</div>`;
@@ -209,9 +216,9 @@ function pintarFicha(){const c=cur;$("titulo").textContent=c.nombre;const m=c.ma
   // Trabajos
   const tr=(c.trabajos||[]).slice().sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
   const total=tr.reduce((s,t)=>s+(+t.importe||0),0);
-  h+=`<h3>Trabajos e instalaciones <button class="mas" data-a="trabajo">＋ Añadir</button></h3>`;
+  h+=`<h3>Partes de trabajo <button class="mas" data-a="trabajo">＋ Nuevo parte</button></h3>`;
   if(!tr.length)h+=`<div class="card" style="color:var(--gris);font-size:13.5px">Apunta cada instalación, revisión o avería con sus equipos y fotos.</div>`;
-  for(const t of tr)h+=`<div class="card trab" data-trab="${t.id}"><div class="top"><b>${esc(t.clase)} · ${esc(t.cat)}</b><small>${fES(t.fecha)}</small></div>
+  for(const t of tr)h+=`<div class="card trab" data-trab="${t.id}"><div class="top"><b>${esc(t.clase)} · ${esc(t.cat)}</b><small>${fES(t.fecha)}</small></div><small>${esc(t.numero||"")}${t.horaIni?" · "+esc(t.horaIni)+"–"+esc(t.horaFin||""):""}</small> ${t.estado==="pendiente"?`<span class="tag n">Pendiente</span>`:""}${t.firmaCli?`<span class="tag a">Firmado</span>`:""}
     ${t.desc?`<div style="font-size:14px;margin-top:3px;white-space:pre-wrap">${esc(t.desc)}</div>`:""}
     ${t.equipos?`<small>Equipos: ${esc(t.equipos)}</small><br>`:""}
     <div>${t.importe?`<span class="tag">${eur(t.importe)}</span>`:""}${t.presupuesto?`<span class="tag">${esc(t.presupuesto)}</span>`:""}${t.garantia?`<span class="tag ${dias(t.garantia)<0?"r":"v"}">Garantía hasta ${fES(t.garantia)}</span>`:""}</div>
@@ -222,7 +229,10 @@ function pintarFicha(){const c=cur;$("titulo").textContent=c.nombre;const m=c.ma
 
 // ---------- Eventos de la vista ----------
 $("main").addEventListener("click",async e=>{
-  const fil=e.target.closest("[data-fil]");if(fil){filtro=fil.dataset.fil;pintarLista();return}
+  const fil=e.target.closest("[data-fil]");if(fil){if(fil.dataset.fil==="partes"){volverA="partes";ir("partes");return}filtro=fil.dataset.fil;pintarLista();return}
+  const fp=e.target.closest("[data-filp]");if(fp){filtroP=fp.dataset.filp;pintarPartes();return}
+  const pp=e.target.closest("[data-pt]");if(pp&&vista==="partes"){const c=db.clientes.find(x=>x.id===pp.dataset.pc);ir("ficha",c);formTrabajo(c.trabajos.find(x=>x.id===pp.dataset.pt));return}
+  const pn=e.target.closest("[data-a=parteNuevo]");if(pn){elegirClienteParte();return}
   const ft=e.target.closest("img[data-foto]");if(ft){e.stopPropagation();abrirVisor(ft.dataset.foto,ft.dataset.t);return}
   const cl=e.target.closest("[data-cli]");if(cl&&vista==="lista"){ir("ficha",db.clientes.find(c=>c.id===cl.dataset.cli));return}
   const c=cur;if(!c)return;
@@ -242,7 +252,7 @@ $("main").addEventListener("click",async e=>{
   if(a==="borrar"){if(!await confirmar(`¿Eliminar la ficha de ${c.nombre} con todos sus trabajos y fotos?`))return;
     for(const t of c.trabajos||[])for(const f of t.fotos||[]){IDB.del(f).catch(()=>{});Nube.borrarFoto(f)}db.clientes=db.clientes.filter(x=>x!==c);guardar();ir("lista")}
 });
-$("bAtras").onclick=()=>{if(vista==="lista")location.href="/";else ir("lista")};
+$("bAtras").onclick=()=>{if(vista==="lista"||vista==="partes")location.href="/";else ir(volverA||"lista")};
 $("fab").onclick=()=>formCliente(null);
 $("bMenu").onclick=()=>$("vMenu").classList.add("on");
 document.querySelectorAll(".velo:not(#vDlg)").forEach(v=>v.addEventListener("click",e=>{if(e.target===v||e.target.closest("[data-cerrar]"))v.classList.remove("on")}));
@@ -252,7 +262,7 @@ function tocar(c){c.act=new Date().toISOString();guardar()}
 function abrirForm(t,html){$("fTit").firstChild.textContent=t+" ";$("fCuerpo").innerHTML=html;$("vForm").classList.add("on");$("vForm").firstElementChild.scrollTop=0}
 const cerrarForm=()=>$("vForm").classList.remove("on");
 const val=id=>($(id).value||"").trim();
-function formCliente(c){const n=!c;c=c||{tipo:"particular"};
+function formCliente(c,conParte){const n=!c;c=c||{tipo:"particular"};
   abrirForm(n?"Nuevo cliente":"Editar cliente",`<div class="seg"><button data-tp="particular" class="${c.tipo!=="empresa"?"on":""}">Particular</button><button data-tp="empresa" class="${c.tipo==="empresa"?"on":""}">Empresa</button></div>
   <label>Nombre o razón social<input id="cN" value="${esc(c.nombre)}" autocomplete="off"></label>
   <div class="g2"><label>Teléfono<input id="cT" inputmode="tel" value="${esc(c.tel)}"></label><label>NIF / CIF<input id="cNif" value="${esc(c.nif)}"></label></div>
@@ -267,7 +277,7 @@ function formCliente(c){const n=!c;c=c||{tipo:"particular"};
   if(n)setTimeout(()=>$("cN").focus(),80);
   $("cOk").onclick=()=>{const nom=val("cN");if(!nom){aviso("Pon el nombre del cliente");return}
     Object.assign(c,{tipo,nombre:nom,tel:val("cT"),nif:val("cNif"),email:val("cE"),contacto:val("cC"),dir:val("cD"),localidad:val("cL"),notas:val("cNo")});
-    if(n){c.id=uid();c.creado=hoy();c.trabajos=[];c.accesos=[];db.clientes.push(c)}tocar(c);cerrarForm();ir("ficha",c)}}
+    if(n){c.id=uid();c.creado=hoy();c.trabajos=[];c.accesos=[];db.clientes.push(c)}tocar(c);cerrarForm();ir("ficha",c);if(conParte)setTimeout(()=>formTrabajo(null),60)}}
 function formMant(c){const m=c.mant||{activo:true,plan:c.tipo==="empresa"?"Cuota de mantenimiento":"Mantenimiento",cuota:c.tipo==="empresa"?49:"",inicio:hoy(),fin:masMeses(hoy(),12),cadencia:12,proxima:masMeses(hoy(),12)};
   abrirForm("Mantenimiento",`<label class="chk"><input type="checkbox" id="mA" ${m.activo?"checked":""}> Contrato de mantenimiento activo</label>
   <label>Plan<input id="mP" value="${esc(m.plan)}"></label>
@@ -287,24 +297,117 @@ function formAcceso(a){const n=!a;a=a||{};
   $("aOk").onclick=()=>{if(!val("aN")){aviso("Pon qué es (p. ej. WiFi casa)");return}Object.assign(a,{nombre:val("aN"),usuario:val("aU"),clave:$("aK").value,notas:val("aNo")});
     if(n){a.id=uid();(cur.accesos=cur.accesos||[]).push(a)}tocar(cur);cerrarForm();pintarFicha()};
   if(!n)$("aDel").onclick=async()=>{if(!await confirmar("¿Eliminar este acceso?"))return;cur.accesos=cur.accesos.filter(x=>x!==a);tocar(cur);cerrarForm();pintarFicha()}}
-let fotosTmp=[];
-function formTrabajo(t){const n=!t;t=t||{fecha:hoy(),clase:"Instalación",cat:"Starlink",fotos:[]};fotosTmp=(t.fotos||[]).slice();
-  abrirForm(n?"Nuevo trabajo":"Editar trabajo",`<div class="g2"><label>Tipo<select id="tC">${CLASES.map(x=>`<option ${t.clase===x?"selected":""}>${x}</option>`).join("")}</select></label>
+// ---------- Partes de trabajo ----------
+let fotosTmp=[],matTmp=[],firmaTmp=null;
+const EMP_DEF={marca:"ALMARA",lema:"Starlink · WiFi · Redes · Videovigilancia · Electricidad",titular:"Alin Florei",nie:"",localidad:"Calafell (Tarragona)",telefono:"623 916 122",email:"contacto@almara.group",web:"almara.group",firma:""};
+const empresa=()=>{try{return{...EMP_DEF,...JSON.parse(localStorage.getItem("almara-empresa-v1")||"{}")}}catch(e){return EMP_DEF}};
+function todosPartes(){const L=[];for(const c of db.clientes)for(const t of c.trabajos||[])L.push({c,t});return L}
+function siguienteParte(){const y=new Date().getFullYear();let mx=0;for(const {t} of todosPartes()){const m=/^PT-(\d{4})-(\d+)$/.exec(t.numero||"");if(m&&+m[1]===y)mx=Math.max(mx,+m[2])}return`PT-${y}-${String(mx+1).padStart(3,"0")}`}
+function horas(a,b){if(!a||!b)return"";const[h1,m1]=a.split(":").map(Number),[h2,m2]=b.split(":").map(Number);let d=(h2*60+m2)-(h1*60+m1);if(d<0)d+=1440;const h=Math.floor(d/60),m=d%60;return h+" h"+(m?" "+m+" min":"")}
+function formTrabajo(t){const n=!t;t=t||{fecha:hoy(),clase:"Instalación",cat:"Starlink",fotos:[],estado:"terminado"};
+  fotosTmp=(t.fotos||[]).slice();matTmp=(t.material||[]).map(x=>({...x}));firmaTmp=t.firmaCli?{png:t.firmaCli,nombre:t.firmaNombre||"",dni:t.firmaDni||"",fecha:t.firmadoEn||""}:null;
+  let estado=t.estado||"terminado";
+  abrirForm(n?"Nuevo parte de trabajo":"Parte "+(t.numero||""),`<div class="g2"><label>Tipo<select id="tC">${CLASES.map(x=>`<option ${t.clase===x?"selected":""}>${x}</option>`).join("")}</select></label>
   <label>Servicio<select id="tS">${CATS.map(x=>`<option ${t.cat===x?"selected":""}>${x}</option>`).join("")}</select></label></div>
   <label>Fecha<input id="tF" type="date" value="${t.fecha||hoy()}"></label>
-  <label>Qué se hizo<textarea id="tD" rows="3" placeholder="Antena en el tejado, soporte de pared, cable 15 m…">${esc(t.desc)}</textarea></label>
-  <label>Equipos, modelos y nº de serie<textarea id="tE" rows="2" placeholder="TP-Link Deco X50 pack 3 · S/N …">${esc(t.equipos)}</textarea></label>
+  <div class="g2"><label>Hora de entrada<input id="tHi" type="time" value="${t.horaIni||""}"></label><label>Hora de salida<input id="tHf" type="time" value="${t.horaFin||""}"></label></div>
+  <label>Trabajo realizado<textarea id="tD" rows="4" placeholder="Antena en el tejado, soporte de pared, cable 15 m, configuración…">${esc(t.desc)}</textarea></label>
+  <label>Equipos instalados (modelo y nº de serie)<textarea id="tE" rows="2" placeholder="TP-Link Deco X50 pack 3 · S/N …">${esc(t.equipos)}</textarea></label>
+  <label>Material utilizado</label><div id="tMat"></div><button class="btn" id="tAddM" style="margin-top:4px">＋ Añadir material</button>
+  <label style="margin-top:14px">Estado</label><div class="seg"><button data-est="terminado" class="${estado==="terminado"?"on":""}">✓ Terminado</button><button data-est="pendiente" class="${estado==="pendiente"?"on":""}">⏳ Pendiente</button></div>
+  <label>Observaciones / qué queda pendiente<textarea id="tO" rows="2">${esc(t.obs)}</textarea></label>
   <div class="g2"><label>Importe (€)<input id="tI" type="number" inputmode="decimal" step="any" value="${esc(t.importe)}"></label><label>Nº presupuesto<input id="tP" value="${esc(t.presupuesto)}" placeholder="P-2026-028"></label></div>
   <label>Garantía hasta<input id="tG" type="date" value="${t.garantia||""}"></label>
   <label>Fotos</label><div class="fotos" id="tFotos"></div>
   <button class="btn" id="tAddF">📷 Añadir fotos</button><input type="file" id="tFile" accept="image/*" multiple hidden>
-  <button class="btn az" id="tOk">Guardar</button>${n?"":`<button class="btn rojo" id="tDel">Eliminar trabajo</button>`}`);
+  <label style="margin-top:14px">Conformidad del cliente</label><div id="tFirma"></div>
+  <button class="btn az" id="tOk">Guardar parte</button><button class="btn" id="tPdf">📄 Guardar y crear PDF</button>${n?"":`<button class="btn rojo" id="tDel">Eliminar parte</button>`}`);
   const pf=()=>{$("tFotos").innerHTML=fotosTmp.map(f=>`<img data-foto="${f}" alt="">`).join("");pintarFotos()};pf();
+  const pm=()=>{$("tMat").innerHTML=matTmp.length?matTmp.map((m,i)=>`<div class="mat"><input data-mq="${i}" inputmode="decimal" value="${esc(m.q)}" placeholder="Cant."><input data-mc="${i}" value="${esc(m.c)}" placeholder="Material"><button data-mx="${i}">✕</button></div>`).join(""):`<small style="color:var(--gris)">Sin material apuntado.</small>`};pm();
+  $("tMat").oninput=e=>{const x=e.target;if(x.dataset.mq)matTmp[x.dataset.mq].q=x.value;if(x.dataset.mc)matTmp[x.dataset.mc].c=x.value};
+  $("tMat").onclick=e=>{const b=e.target.closest("[data-mx]");if(b){matTmp.splice(+b.dataset.mx,1);pm()}};
+  $("tAddM").onclick=()=>{matTmp.push({q:"1",c:""});pm();const ins=document.querySelectorAll("[data-mc]");ins[ins.length-1].focus()};
+  document.querySelectorAll("[data-est]").forEach(b=>b.onclick=()=>{estado=b.dataset.est;document.querySelectorAll("[data-est]").forEach(x=>x.classList.toggle("on",x===b))});
+  const pfi=()=>{$("tFirma").innerHTML=firmaTmp?`<div class="card" style="text-align:center"><img src="${firmaTmp.png}" style="max-width:100%;max-height:110px"><div style="font-size:13px;color:var(--gris)">${esc(firmaTmp.nombre||"")}${firmaTmp.dni?" · DNI "+esc(firmaTmp.dni):""}</div></div><button class="btn" id="tFirmar">✍️ Volver a firmar</button>`
+    :`<button class="btn" id="tFirmar" style="border:2px dashed var(--borde);background:#fff">✍️ Firma del cliente</button>`;$("tFirmar").onclick=()=>abrirFirma(f=>{firmaTmp=f;pfi()})};pfi();
   $("tAddF").onclick=()=>$("tFile").click();
   $("tFile").onchange=async e=>{aviso("Guardando fotos…",4000);for(const f of e.target.files){try{const b=await comprimir(f),id="f-"+uid();await IDB.set(id,b);Nube.subirFoto(id,b);fotosTmp.push(id)}catch(err){aviso("Una foto no se ha podido guardar",2500)}}e.target.value="";pf();aviso("Fotos añadidas")};
-  $("tOk").onclick=()=>{Object.assign(t,{clase:$("tC").value,cat:$("tS").value,fecha:val("tF"),desc:val("tD"),equipos:val("tE"),importe:val("tI").replace(",","."),presupuesto:val("tP"),garantia:val("tG"),fotos:fotosTmp});
-    if(n){t.id=uid();(cur.trabajos=cur.trabajos||[]).push(t)}tocar(cur);cerrarForm();pintarFicha()};
-  if(!n)$("tDel").onclick=async()=>{if(!await confirmar("¿Eliminar este trabajo y sus fotos?"))return;for(const f of t.fotos||[]){IDB.del(f).catch(()=>{});Nube.borrarFoto(f)}cur.trabajos=cur.trabajos.filter(x=>x!==t);tocar(cur);cerrarForm();pintarFicha()}}
+  const guardarT=()=>{Object.assign(t,{clase:$("tC").value,cat:$("tS").value,fecha:val("tF"),horaIni:val("tHi"),horaFin:val("tHf"),desc:val("tD"),equipos:val("tE"),
+      material:matTmp.filter(m=>String(m.c).trim()).map(m=>({q:String(m.q).trim(),c:String(m.c).trim()})),estado,obs:val("tO"),importe:val("tI").replace(",","."),presupuesto:val("tP"),garantia:val("tG"),fotos:fotosTmp});
+    if(firmaTmp){t.firmaCli=firmaTmp.png;t.firmaNombre=firmaTmp.nombre;t.firmaDni=firmaTmp.dni;t.firmadoEn=firmaTmp.fecha}else{delete t.firmaCli;delete t.firmaNombre;delete t.firmaDni;delete t.firmadoEn}
+    if(!t.numero)t.numero=siguienteParte();if(n&&!t.id){t.id=uid();(cur.trabajos=cur.trabajos||[]).push(t)}tocar(cur)};
+  $("tOk").onclick=()=>{guardarT();cerrarForm();pintar();aviso("Parte "+t.numero+" guardado")};
+  $("tPdf").onclick=async()=>{guardarT();aviso("Creando PDF…",8000);try{const b=await pdfParte(cur,t);aviso("");
+      await compartir(new File([b],("Parte_"+t.numero+"_"+cur.nombre).replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"_")+".pdf",{type:"application/pdf"}))}catch(err){aviso("");await avisar("No se ha podido crear el PDF")}
+    cerrarForm();pintar()};
+  if(!n)$("tDel").onclick=async()=>{if(!await confirmar("¿Eliminar este parte y sus fotos?"))return;for(const f of t.fotos||[]){IDB.del(f).catch(()=>{});Nube.borrarFoto(f)}cur.trabajos=cur.trabajos.filter(x=>x!==t);tocar(cur);cerrarForm();pintar()}}
+// Firma del cliente con el dedo
+function abrirFirma(listo){const v=$("vFirma"),cv=$("firmaCv"),cx=cv.getContext("2d");v.classList.add("on");
+  const r=cv.getBoundingClientRect();cv.width=Math.round(r.width*2);cv.height=Math.round(r.height*2);
+  const limpiar=()=>{cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.strokeStyle="#D6DEE8";cx.lineWidth=3;cx.beginPath();cx.moveTo(40,cv.height*.78);cx.lineTo(cv.width-40,cv.height*.78);cx.stroke()};
+  limpiar();let dib=false,ult=null,trazo=false;$("fNom").value=(cur&&(cur.contacto||cur.nombre))||"";$("fDni").value="";
+  const pos=e=>{const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*cv.width/b.width,y:(e.clientY-b.top)*cv.height/b.height}};
+  cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);dib=true;ult=pos(e);trazo=true};
+  cv.onpointermove=e=>{if(!dib)return;const p=pos(e);cx.strokeStyle="#0B1F3A";cx.lineWidth=5;cx.lineCap="round";cx.beginPath();cx.moveTo(ult.x,ult.y);cx.lineTo(p.x,p.y);cx.stroke();ult=p};
+  cv.onpointerup=cv.onpointercancel=()=>{dib=false};
+  $("fBorrar").onclick=()=>{limpiar();trazo=false};$("fCancelar").onclick=()=>v.classList.remove("on");
+  $("fAceptar").onclick=()=>{if(!trazo){aviso("Firma en el recuadro");return}const png=recorte(cv);v.classList.remove("on");
+    listo({png,nombre:$("fNom").value.trim(),dni:$("fDni").value.trim(),fecha:new Date().toISOString()})}}
+function recorte(cv){const cx=cv.getContext("2d"),d=cx.getImageData(0,0,cv.width,cv.height).data;let a=cv.width,b=cv.height,c=0,e=0;
+  for(let y=0;y<cv.height;y+=2)for(let x=0;x<cv.width;x+=2){const i=(y*cv.width+x)*4;if(d[i]<120&&d[i+2]<160){a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);e=Math.max(e,y)}}
+  const m=10,w=Math.max(10,c-a+2*m),h=Math.max(10,e-b+2*m),k=Math.min(1,500/w),o=document.createElement("canvas");o.width=Math.round(w*k);o.height=Math.round(h*k);
+  const ox=o.getContext("2d");ox.fillStyle="#fff";ox.fillRect(0,0,o.width,o.height);ox.drawImage(cv,a-m,b-m,w,h,0,0,o.width,o.height);return o.toDataURL("image/png")}
+// PDF del parte, con el mismo diseño que los presupuestos
+async function pdfParte(c,t){const AZ="#0B1F3A",AC="#1E88E5",GR="#5F6B7A",LI="#D9DEE5",FO="#F3F6FA",BL="#FFFFFF",E=empresa(),pdf=new MiniPDF();
+  const cab=()=>{pdf.rect(0,0,210,34,AZ);pdf.rect(0,34,210,1.2,AC);pdf.txt(18,19,E.marca,26,1,BL);pdf.txt(18,26,(E.lema||"").toUpperCase(),8.5,0,"#B9C7DA");
+    pdf.txt(192,17,"PARTE DE TRABAJO",15,1,BL,"r");pdf.txt(192,24,t.numero||"",9.5,0,BL,"r");
+    pdf.linea(18,281,192,281,LI,.5);pdf.txt(18,286,[E.marca,E.localidad,E.telefono,E.email,E.web].filter(Boolean).join(" · "),7.5,0,GR);pdf.txt(192,286,"Página "+pdf.pags.length,7.5,0,GR,"r")};
+  cab();let y=42;const nueva=()=>{pdf.nueva();cab();y=42},hace=h=>{if(y+h>274)nueva()};
+  const col=(x,w,lab,lineas)=>{let yy=y+3;pdf.txt(x,yy,lab,7.5,1,AC);yy+=1.2;for(const [tx,b,s] of lineas)for(const l of partir(tx,s,b,w)){yy+=s>9?4.6:4.06;pdf.txt(x,yy,l,s,b,s>9?AZ:GR)}return yy};
+  const y1=col(18,56,"EMPRESA",[[E.marca,1,9.5],[E.titular+(E.nie?" · NIE "+E.nie:""),0,8.5],[E.localidad,0,8.5],[E.telefono+" · "+E.email,0,8.5]]);
+  const lc=[[c.nombre,1,9.5]];if(c.contacto)lc.push(["Att.: "+c.contacto,0,8.5]);if(c.nif)lc.push(["NIF/CIF: "+c.nif,0,8.5]);const dir=[c.dir,c.localidad].filter(Boolean).join(", ");if(dir)lc.push([dir,0,8.5]);if(c.tel)lc.push(["Tel.: "+c.tel,0,8.5]);
+  const y2=col(76,70,"CLIENTE",lc);
+  let yy=y+3;pdf.txt(148,yy,"DATOS",7.5,1,AC);yy+=1.2;
+  const datos=[["Fecha: ",fES(t.fecha)]];if(t.horaIni||t.horaFin)datos.push(["Horario: ",(t.horaIni||"—")+" a "+(t.horaFin||"—")]);const hh=horas(t.horaIni,t.horaFin);if(hh)datos.push(["Tiempo: ",hh]);if(t.presupuesto)datos.push(["Presupuesto: ",t.presupuesto]);
+  for(const [a,b] of datos){yy+=4.06;const w=pdf.txt(148,yy,a,8.5,0,GR);pdf.txt(148+w,yy,b,8.5,1,GR)}
+  y=Math.max(y1,y2,yy)+8;for(const l of partir(t.clase+" · "+t.cat,14,1,174)){y+=5.5;pdf.txt(18,y,l,14,1,AZ)}y+=4;
+  const seccion=(lab,txt)=>{if(!txt)return;const ls=partir(txt,9.5,0,174);hace(9+Math.min(ls.length,6)*4.5);y+=5;pdf.txt(18,y,lab,7.5,1,AC);y+=1;for(const l of ls){hace(5);y+=4.5;pdf.txt(18,y,l,9.5,0,AZ)}y+=2};
+  seccion("TRABAJO REALIZADO",t.desc);seccion("EQUIPOS INSTALADOS",t.equipos);
+  if((t.material||[]).length){hace(20);y+=5;pdf.txt(18,y,"MATERIAL UTILIZADO",7.5,1,AC);y+=2;
+    const enc=()=>{pdf.rect(18,y,174,7,AZ);pdf.txt(20,y+4.8,"Cant.",9,1,BL);pdf.txt(40,y+4.8,"Material",9,1,BL);y+=7};enc();
+    t.material.forEach((m,i)=>{const ls=partir(m.c,9.5,0,148),h=2.6+ls.length*4.4;if(y+h>274){nueva();enc()}if(i%2)pdf.rect(18,y,174,h,FO);
+      pdf.txt(20,y+4.6,String(m.q||""),9.5,1,AZ);ls.forEach((l,j)=>pdf.txt(40,y+4.6+j*4.4,l,9.5,0,AZ));y+=h;pdf.linea(18,y,192,y,LI,.4)});y+=2}
+  hace(14);y+=6;pdf.txt(18,y,"ESTADO",7.5,1,AC);y+=5;pdf.txt(18,y,t.estado==="pendiente"?"Pendiente de terminar":"Trabajo terminado",10,1,t.estado==="pendiente"?"#E8730C":"#2E9D5B");
+  if(t.garantia)pdf.txt(192,y,"Garantía hasta "+fES(t.garantia),9,0,GR,"r");y+=2;seccion("OBSERVACIONES",t.obs);
+  // Fotos, dos por fila
+  const fotos=[];for(const id of (t.fotos||[]).slice(0,12)){let b=await IDB.get(id).catch(()=>null);if(!b)b=await Nube.bajarFoto(id);if(b){const j=await aJPG(b,1100,.8).catch(()=>null);if(j)fotos.push(j)}}
+  if(fotos.length){hace(75);y+=6;pdf.txt(18,y,"FOTOS",7.5,1,AC);y+=3;
+    for(let i=0;i<fotos.length;i+=2){if(y+66>274){nueva()}for(let k=0;k<2&&i+k<fotos.length;k++){const f=fotos[i+k],x=18+k*89,e=Math.min(85/f.w,64/f.h),w=f.w*e,h=f.h*e;
+      pdf.rect(x,y,85,64,FO);pdf.imagen(f.jpg,f.w,f.h,x+(85-w)/2,y+(64-h)/2,w,h)}y+=68}}
+  // Firmas
+  if(y+44>274)nueva();y+=8;pdf.txt(18,y,"CONFORMIDAD DEL CLIENTE",7.5,1,AC);pdf.txt(112,y,E.marca,7.5,1,AC);y+=3;
+  if(t.firmaCli){const f=await aJPG(t.firmaCli,600,.9).catch(()=>null);if(f){const e=Math.min(70/f.w,22/f.h);pdf.imagen(f.jpg,f.w,f.h,20,y,f.w*e,f.h*e)}}
+  if(E.firma){const f=await aJPG(E.firma,600,.9).catch(()=>null);if(f){const e=Math.min(70/f.w,22/f.h);pdf.imagen(f.jpg,f.w,f.h,114,y,f.w*e,f.h*e)}}
+  y+=24;pdf.linea(18,y,98,y,GR,.6);pdf.linea(112,y,192,y,GR,.6);y+=4.5;
+  pdf.txt(18,y,t.firmaCli?[t.firmaNombre,t.firmaDni?"DNI "+t.firmaDni:""].filter(Boolean).join(" · ")||"Firma del cliente":"Firma del cliente",8.5,0,GR);pdf.txt(112,y,E.titular||E.marca,8.5,0,GR);
+  if(t.firmadoEn){y+=4;const d=new Date(t.firmadoEn);pdf.txt(18,y,"Firmado el "+d.toLocaleDateString("es-ES")+" a las "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}),7.5,0,GR)}
+  return pdf.salida()}
+// Lista de todos los partes
+let filtroP="todos";
+function pintarPartes(){$("titulo").textContent="Partes de trabajo";const L=todosPartes().filter(({t})=>filtroP==="todos"||(filtroP==="pend"&&t.estado==="pendiente")||(filtroP==="sinfirma"&&!t.firmaCli))
+    .sort((a,b)=>((b.t.fecha||"")+(b.t.horaIni||"")).localeCompare((a.t.fecha||"")+(a.t.horaIni||"")));
+  let h=`<div class="chips" style="padding-top:0">${[["todos","Todos"],["pend","Pendientes"],["sinfirma","Sin firmar"]].map(([k,l])=>`<button data-filp="${k}" class="${filtroP===k?"on":""}">${l}</button>`).join("")}</div>
+  <button class="btn az" data-a="parteNuevo" style="margin:4px 0 6px">＋ Nuevo parte de trabajo</button><h3>${L.length} parte${L.length===1?"":"s"}</h3>`;
+  if(!L.length)h+=`<div class="vacio">No hay partes${filtroP==="todos"?" todavía":" con ese filtro"}.</div>`;
+  for(const {c,t} of L)h+=`<div class="card trab" data-pc="${c.id}" data-pt="${t.id}"><div class="top"><b>${esc(c.nombre)}</b><small>${fES(t.fecha)}</small></div>
+    <small>${esc(t.numero||"Sin número")} · ${esc(t.clase)} · ${esc(t.cat)}</small>${t.desc?`<div style="font-size:13.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.desc)}</div>`:""}
+    <div>${t.estado==="pendiente"?`<span class="tag n">Pendiente</span>`:`<span class="tag v">Terminado</span>`}${t.firmaCli?`<span class="tag a">Firmado</span>`:`<span class="tag">Sin firmar</span>`}${(t.fotos||[]).length?`<span class="tag">📷 ${t.fotos.length}</span>`:""}</div></div>`;
+  $("main").innerHTML=h}
+function elegirClienteParte(){const pinta=q=>{q=(q||"").toLowerCase();const L=db.clientes.filter(c=>!q||[c.nombre,c.localidad,c.tel].join(" ").toLowerCase().includes(q)).sort((a,b)=>(b.act||"").localeCompare(a.act||""));
+    $("pcLista").innerHTML=L.map(c=>`<div class="card cli" data-pcli="${c.id}"><div class="av" style="background:${color(c.nombre)}">${esc(iniciales(c.nombre))}</div><div class="q"><b>${esc(c.nombre)}</b><small>${esc([c.localidad,c.tel].filter(Boolean).join(" · ")||"—")}</small></div></div>`).join("")||`<div class="vacio">Ningún cliente.</div>`};
+  abrirForm("¿Para qué cliente?",`<input class="buscar" id="pcBus" placeholder="Buscar cliente" autocomplete="off"><div id="pcLista" style="margin-top:10px"></div><button class="btn az" id="pcNuevo">＋ Cliente nuevo</button>`);
+  pinta("");$("pcBus").oninput=e=>pinta(e.target.value);$("pcNuevo").onclick=()=>{cerrarForm();formCliente(null,true)};
+  $("pcLista").onclick=e=>{const r=e.target.closest("[data-pcli]");if(!r)return;cerrarForm();ir("ficha",db.clientes.find(c=>c.id===r.dataset.pcli));setTimeout(()=>formTrabajo(null),50)}}
 // Visor de fotos
 let visorId=null;
 async function abrirVisor(id){visorId=id;$("visorImg").src=await urlFoto(id);$("visor").classList.add("on")}
@@ -343,7 +446,9 @@ cargar();pintar();
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("/sw.js").catch(()=>{});
 (()=>{const QP=new URLSearchParams(location.search);if(!location.search)return;history.replaceState(null,"",location.pathname);
   if(QP.get("id")){const c=db.clientes.find(x=>x.id===QP.get("id"));if(c)ir("ficha",c)}
-  if(QP.get("nuevo"))formCliente(null)})();
+  if(QP.get("nuevo"))formCliente(null);
+  if(QP.get("vista")==="partes"){volverA="partes";ir("partes")}
+  if(QP.get("parte")){volverA="partes";vista="partes";pintar();elegirClienteParte()}})();
 function refrescar(ch){if(!ch.length)return;cargar();if(cur){cur=db.clientes.find(c=>c.id===cur.id)||null;if(!cur)vista="lista"}if(!$("vForm").classList.contains("on"))pintar()}
 Nube.sincronizar(["clientes"]).then(refrescar);
 Nube.reintentarFotos(id=>IDB.get(id));
