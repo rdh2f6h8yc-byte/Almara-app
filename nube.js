@@ -9,7 +9,8 @@ window.Nube = (() => {
     clientes: ["almara-clientes-v1"],
     planos: ["almara-planos-v1"],
     presupuestos: ["almara-pres-v1"],
-    empresa: ["almara-empresa-v1", "almara-tarifas-v1"]
+    empresa: ["almara-empresa-v1", "almara-tarifas-v1"],
+    material: ["almara-material-v1"]
   };
   const configurado = () => /^https:\/\//.test(URLB) && KEY.length > 30;
   const sesion = () => { try { return JSON.parse(localStorage.getItem(SK)); } catch (e) { return null; } };
@@ -139,6 +140,19 @@ window.Nube = (() => {
   // Clientes guardados en este móvil (para enlazar planos y presupuestos)
   function clientes() { try { return (JSON.parse(localStorage.getItem("almara-clientes-v1")) || {}).clientes || []; } catch (e) { return []; } }
 
-  return { configurado, sesion, entrar, salir, requerir, marcar, sincronizar, subirFoto, bajarFoto, borrarFoto, reintentarFotos,
+  // Peticiones directas a la base de datos (contactos, enlaces de presupuestos…)
+  async function api(path, opt = {}) {
+    if (!configurado() || !sesion()) throw new Error("Sin conexión con la nube");
+    const r = await pedir("/rest/v1/" + path, { ...opt, headers: await cab({ "Content-Type": "application/json", ...(opt.headers || {}) }) }, 20000);
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text()).slice(0, 200));
+    const t = await r.text(); return t ? JSON.parse(t) : null;
+  }
+  // Funciones públicas (sin sesión), para la página que ve el cliente
+  async function rpcPublica(fn, args) {
+    const r = await pedir("/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(args) }, 15000);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+  return { api, rpcPublica, configurado, sesion, entrar, salir, requerir, marcar, sincronizar, subirFoto, bajarFoto, borrarFoto, reintentarFotos,
     clientes, estado: () => est, CLAVES };
 })();

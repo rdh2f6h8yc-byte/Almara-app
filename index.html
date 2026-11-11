@@ -82,6 +82,9 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
       <a class="tile nuevo" href="/planos/?nuevo=pres"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo presupuesto</b><small>En PDF para enviar</small></a>
       <a class="tile" href="/clientes/?vista=partes"><span class="ic" style="background:#F1E8F8">📝</span><b>Partes de trabajo</b><small id="nPar">Con firma del cliente</small></a>
       <a class="tile nuevo" href="/clientes/?parte=nuevo"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo parte</b><small>Al terminar un trabajo</small></a>
+      <a class="tile" href="/contactos/"><span class="ic" style="background:#E3F0FC">📨</span><b>Contactos web</b><small id="nCon">Peticiones de la web</small></a>
+      <a class="tile" href="/estadisticas/"><span class="ic" style="background:#E3F4EA">📊</span><b>Estadísticas</b><small>Cómo va el negocio</small></a>
+      <a class="tile" href="/material/"><span class="ic" style="background:#FFF1E3">📦</span><b>Material</b><small id="nMat">Furgoneta e inventario</small></a>
     </div>
     <div id="avisos"></div>
     <button class="salir" id="bSalir">Cerrar sesión</button>
@@ -106,7 +109,7 @@ function mostrar(){
   if(!dentro()){$("acceso").style.display="flex";$("inicio").style.display="none";$("avisoConf").hidden=Nube.configurado();return}
   if(volver&&volver.startsWith("/")&&!volver.startsWith("//")){location.replace(volver);return}
   $("acceso").style.display="none";$("inicio").style.display="block";pintarInicio();
-  Nube.sincronizar().then(()=>{pintarInicio();estadoNube()});
+  Nube.sincronizar().then(async()=>{try{if(Nube.sesion()){const c=await Nube.api("contactos?select=*&order=creado.desc&limit=500");localStorage.setItem("almara-contactos-cache",JSON.stringify(c))}}catch(e){}pintarInicio();estadoNube()});
 }
 function estadoNube(){const e=Nube.estado();$("nubeTxt").innerHTML=Nube.configurado()?`<span style="color:${e.c||"#9FB4CF"}">☁︎</span> ${esc(e.t||"Conectando…")}<br><small>${esc((Nube.sesion()||{user:{}}).user.email||"")}</small>`:"Solo en este móvil"}
 function pintarInicio(){
@@ -119,7 +122,16 @@ function pintarInicio(){
   const av=[];for(const c of cl){const m=c.mant;if(!m||!m.activo)continue;
     if(m.proxima&&dias(m.proxima)<=30)av.push({c,d:dias(m.proxima),t:"Revisión"});if(m.fin&&dias(m.fin)<=30)av.push({c,d:dias(m.fin),t:"Renovar contrato"})}
   av.sort((a,b)=>a.d-b.d);
-  $("avisos").innerHTML=av.length?`<h3>🔔 Mantenimientos próximos</h3><div class="alerta">${av.map(a=>`<a href="/clientes/?id=${encodeURIComponent(a.c.id)}"><span>${esc(a.c.nombre)} · ${a.t}</span><b style="color:${a.d<0?"var(--rojo)":"var(--nar)"};white-space:nowrap">${cuando(a.d)}</b></a>`).join("")}</div>`:"";
+  // Otros avisos: contactos nuevos, presupuestos aceptados, material bajo e inventario del mes
+  const ct=lee("almara-contactos-cache")||[],ctN=ct.filter(c=>c.estado==="nuevo").length;$("nCon").textContent=ctN?ctN+" nuevo"+(ctN>1?"s":"")+" sin atender":"Peticiones de la web";
+  const mat=lee("almara-material-v1")||{items:[],inventarios:[]},bajo=(mat.items||[]).filter(i=>i.min>0&&i.stock<=i.min),mes=hoy().slice(0,7),inv=(mat.inventarios||[]).some(v=>v.mes===mes);
+  if((mat.items||[]).length)$("nMat").textContent=bajo.length?bajo.length+" por reponer":(inv?"Inventario al día":"Inventario del mes pendiente");
+  const otros=[];if(ctN)otros.push(`<a href="/contactos/"><span>📨 ${ctN} contacto${ctN>1?"s":""} nuevo${ctN>1?"s":""} de la web</span><b style="color:var(--acento)">Ver</b></a>`);
+  for(const p of pr.filter(p=>p.enlace&&p.enlace.estado==="aceptado"&&p.enlace.respondido&&dias(p.enlace.respondido.slice(0,10))>=-14))otros.push(`<a href="/planos/?pres=${encodeURIComponent(p.id)}"><span>✅ ${esc(p.numero)} aceptado por ${esc(p.enlace.firma_nombre||p.cliente.nombre||"el cliente")}</span><b style="color:#2E9D5B">${cuando(dias(p.enlace.respondido.slice(0,10)))}</b></a>`);
+  if(bajo.length)otros.push(`<a href="/material/"><span>📦 Reponer: ${esc(bajo.slice(0,3).map(i=>i.nombre).join(", "))}${bajo.length>3?"…":""}</span><b style="color:var(--rojo)">${bajo.length}</b></a>`);
+  if((mat.items||[]).length&&!inv&&new Date().getDate()>=25)otros.push(`<a href="/material/?inv=1"><span>📋 Inventario de la furgoneta de este mes</span><b style="color:var(--nar)">Hacer</b></a>`);
+  const mh=av.map(a=>`<a href="/clientes/?id=${encodeURIComponent(a.c.id)}"><span>🔧 ${esc(a.c.nombre)} · ${a.t}</span><b style="color:${a.d<0?"var(--rojo)":"var(--nar)"};white-space:nowrap">${cuando(a.d)}</b></a>`);
+  const todos=otros.concat(mh);$("avisos").innerHTML=todos.length?`<h3>🔔 Avisos</h3><div class="alerta">${todos.join("")}</div>`:"";
   estadoNube()}
 $("verPass").onclick=()=>{const p=$("pass");p.type=p.type==="password"?"text":"password";$("verPass").textContent=p.type==="password"?"Ver":"Ocultar"};
 $("fAcceso").onsubmit=async e=>{e.preventDefault();$("error").textContent="";const b=$("bEntrar");
