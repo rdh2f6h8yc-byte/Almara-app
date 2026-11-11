@@ -80,6 +80,8 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
       <a class="tile nuevo" href="/planos/?nuevo=plano"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo plano</b><small>Desde cero o con foto</small></a>
       <a class="tile" href="/planos/?modo=pres"><span class="ic" style="background:#E3F4EA">€</span><b>Presupuestos</b><small id="nPre">Con tus tarifas y firma</small></a>
       <a class="tile nuevo" href="/planos/?nuevo=pres"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo presupuesto</b><small>En PDF para enviar</small></a>
+      <a class="tile" href="/clientes/?vista=partes"><span class="ic" style="background:#F1E8F8">📝</span><b>Partes de trabajo</b><small id="nPar">Con firma del cliente</small></a>
+      <a class="tile nuevo" href="/clientes/?parte=nuevo"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo parte</b><small>Al terminar un trabajo</small></a>
     </div>
     <div id="avisos"></div>
     <button class="salir" id="bSalir">Cerrar sesión</button>
@@ -112,6 +114,7 @@ function pintarInicio(){
   const cl=(lee("almara-clientes-v1")||{}).clientes||[],pl=(lee("almara-planos-v1")||{}).proy||[],pr=(lee("almara-pres-v1")||{}).lista||[];
   if(cl.length)$("nCli").textContent=cl.length+" cliente"+(cl.length>1?"s":"");
   if(pl.length)$("nPla").textContent=pl.length+" plano"+(pl.length>1?"s":"");
+  const np=cl.reduce((n,c)=>n+(c.trabajos||[]).length,0),pend=cl.reduce((n,c)=>n+(c.trabajos||[]).filter(t=>t.estado==="pendiente").length,0);if(np)$("nPar").textContent=np+" parte"+(np>1?"s":"")+(pend?" · "+pend+" pendiente"+(pend>1?"s":""):"");
   if(pr.length)$("nPre").textContent=pr.length+" presupuesto"+(pr.length>1?"s":"");
   const av=[];for(const c of cl){const m=c.mant;if(!m||!m.activo)continue;
     if(m.proxima&&dias(m.proxima)<=30)av.push({c,d:dias(m.proxima),t:"Revisión"});if(m.fin&&dias(m.fin)<=30)av.push({c,d:dias(m.fin),t:"Renovar contrato"})}
