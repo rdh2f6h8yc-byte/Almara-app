@@ -52,6 +52,19 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
 .alerta a{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid #F5E3C6;font-size:14px}
 .alerta a:first-child{border-top:0}
 .salir{display:block;margin:26px auto 0;background:none;color:var(--gris);font-weight:700;font-size:14px;padding:10px}
+.avisosBtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:18px;background:#fff;border:1px solid var(--borde);border-radius:16px;padding:14px;text-align:left;color:var(--azul)}
+.avisosBtn .ic{font-size:22px}.avisosBtn b{display:block;font-size:15px}.avisosBtn small{color:var(--gris);font-size:12.5px}
+.velo{position:fixed;inset:0;background:rgba(11,31,58,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}.velo.on{display:flex}
+.hoja{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(var(--sb) + 20px)}
+.hoja h2{margin:0 0 6px;font-size:19px;display:flex;align-items:center}.hoja h2 button{margin-left:auto;background:none;font-size:22px;width:36px;height:36px}
+.paso{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--claro);font-size:14.5px;line-height:1.45}.paso:first-of-type{border-top:0}
+.paso .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--azul);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+.canal{font-family:ui-monospace,Menlo,monospace;font-size:16px;background:var(--claro);border-radius:10px;padding:10px 12px;margin:8px 0;word-break:break-all;font-weight:700}
+.bt{display:inline-block;padding:10px 14px;border-radius:10px;background:var(--claro);color:var(--azul);font-weight:700;font-size:14px;margin:4px 6px 0 0}
+.bt.az{background:var(--azul);color:#fff}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--claro);font-size:14.5px}
+.sw input{width:22px;height:22px;accent-color:#1E88E5}
+.estadoAv{border-radius:12px;padding:10px 12px;font-size:14px;margin:6px 0 4px}
 .aviso-conf{max-width:420px;margin:0 auto 18px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.4);color:#FFE7A3;border-radius:12px;padding:12px;font-size:13px;line-height:1.45}
 </style>
 </head>
@@ -87,10 +100,12 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
       <a class="tile" href="/material/"><span class="ic" style="background:#FFF1E3">📦</span><b>Material</b><small id="nMat">Furgoneta e inventario</small></a>
     </div>
     <div id="avisos"></div>
+    <button class="avisosBtn" id="bAvisos"><span class="ic">🔔</span><span><b>Avisos al móvil</b><small id="avEstado">Te avisa al llegar un contacto o cuando aceptan un presupuesto</small></span></button>
     <button class="salir" id="bSalir">Cerrar sesión</button>
   </main>
 </section>
 
+<div class="velo" id="vAvisos"><div class="hoja"><h2>🔔 Avisos al móvil <button data-cerrar>×</button></h2><div id="avCuerpo"></div></div></div>
 <script src="/config.js"></script>
 <script src="/nube.js"></script>
 <script>
@@ -141,7 +156,41 @@ $("fAcceso").onsubmit=async e=>{e.preventDefault();$("error").textContent="";con
   catch(err){const m=String(err.message||err);$("error").textContent=/invalid/i.test(m)?"Correo o contraseña incorrectos":/abort|fetch|network/i.test(m)?"Sin conexión. Inténtalo de nuevo.":/confirm/i.test(m)?"Falta confirmar el usuario en Supabase":m}
   b.disabled=false;b.textContent="Entrar"};
 $("bSalir").onclick=()=>{Nube.salir();localStorage.removeItem(LOCAL);mostrar()};
+// ---------- Avisos al móvil (app ntfy) ----------
+let AV=null;
+async function leerAvisos(){try{const r=await Nube.api("ajustes_avisos?id=eq.1&select=*");AV=r&&r[0]||null}catch(e){AV=undefined}return AV}
+async function guardarAvisos(cambios){await Nube.api("ajustes_avisos?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:1,app_url:location.origin,...cambios})});await leerAvisos()}
+function estadoBoton(){$("avEstado").textContent=AV&&AV.ntfy_tema?"Activados ✓":"Te avisa al llegar un contacto o cuando aceptan un presupuesto"}
+function nuevoCanal(){const a="abcdefghijkmnpqrstuvwxyz23456789",r=crypto.getRandomValues(new Uint8Array(14));return"almara-"+[...r].map(x=>a[x%a.length]).join("")}
+async function pintarAvisos(){const c=$("avCuerpo");
+  if(!Nube.configurado()||!Nube.sesion()){c.innerHTML=`<p>Para recibir avisos tienes que tener la nube conectada y haber entrado con tu cuenta.</p>`;return}
+  c.innerHTML=`<p style="color:var(--gris)">Cargando…</p>`;await leerAvisos();
+  if(AV===undefined){c.innerHTML=`<div class="estadoAv" style="background:#FDECEC">No se han podido leer los ajustes. Comprueba que has ejecutado en Supabase el archivo <b>supabase3.sql</b> y que tienes conexión.</div>`;return}
+  const t=AV&&AV.ntfy_tema;
+  let h=t?`<div class="estadoAv" style="background:#E3F4EA">✓ Avisos activados en el canal:</div><div class="canal">${esc(t)}</div>`
+    :`<p style="margin:0 0 6px;color:var(--gris);font-size:14px">Recibirás una notificación en el iPhone aunque no tengas la app de ALMARA abierta. Se hace una sola vez:</p>`;
+  h+=`<div class="paso"><span class="n">1</span><div>Instala la app gratuita <b>ntfy</b>.<br><a class="bt" href="https://apps.apple.com/app/id1625396347" target="_blank" rel="noopener">Abrir en la App Store</a></div></div>
+  <div class="paso"><span class="n">2</span><div>${t?"Tu canal privado ya está creado.":"Crea tu canal privado (un nombre secreto que solo conoces tú)."}<br>
+    ${t?`<button class="bt" id="avCopiar">Copiar nombre del canal</button>`:`<button class="bt az" id="avCrear">Crear mi canal</button>`}</div></div>
+  <div class="paso"><span class="n">3</span><div>Abre ntfy, pulsa <b>+</b>, pega el nombre del canal en «Topic name» y pulsa <b>Subscribe</b>. Cuando te pida permiso para notificaciones, pulsa <b>Permitir</b>.</div></div>
+  <div class="paso"><span class="n">4</span><div>Comprueba que funciona.<br><button class="bt az" id="avProbar" ${t?"":"disabled style='opacity:.4'"}>Enviar aviso de prueba</button><span id="avRes" style="font-size:13px;color:var(--gris)"></span></div></div>`;
+  if(t)h+=`<h3 style="margin:16px 0 4px">Qué quieres que te avise</h3>
+    <label class="sw"><span>📨 Contacto nuevo desde la web</span><input type="checkbox" data-k="contactos" ${AV.contactos?"checked":""}></label>
+    <label class="sw"><span>✅ Presupuesto aceptado o rechazado</span><input type="checkbox" data-k="presupuestos" ${AV.presupuestos?"checked":""}></label>
+    <label class="sw"><span>👀 El cliente abre el presupuesto</span><input type="checkbox" data-k="visto" ${AV.visto?"checked":""}></label>
+    <p style="font-size:12px;color:var(--gris);line-height:1.4;margin-top:12px">Al tocar el aviso se abre la app en la pantalla correspondiente. Los avisos pasan por el servicio gratuito ntfy.sh; el nombre del canal es secreto, no lo compartas.</p>
+    <button class="bt" id="avCambiar" style="margin-top:6px">Cambiar el canal (si lo has compartido por error)</button>`;
+  c.innerHTML=h;estadoBoton();
+  const crear=async()=>{try{await guardarAvisos({ntfy_tema:nuevoCanal()});pintarAvisos()}catch(e){alert("No se ha podido crear el canal: "+e.message)}};
+  if($("avCrear"))$("avCrear").onclick=crear;
+  if($("avCambiar"))$("avCambiar").onclick=async()=>{if(confirm("Se creará un canal nuevo y tendrás que suscribirte otra vez en ntfy. ¿Seguir?"))crear()};
+  if($("avCopiar"))$("avCopiar").onclick=async()=>{try{await navigator.clipboard.writeText(t);$("avCopiar").textContent="Copiado ✓"}catch(e){prompt("Copia el nombre del canal:",t)}};
+  if($("avProbar"))$("avProbar").onclick=async()=>{$("avRes").textContent=" Enviando…";try{const r=await Nube.api("rpc/probar_aviso",{method:"POST",body:"{}"});$("avRes").textContent=r==="ok"?" Enviado: te tiene que llegar en unos segundos.":" Falta crear el canal."}catch(e){$("avRes").textContent=" No se ha podido enviar."}};
+  c.querySelectorAll("[data-k]").forEach(i=>i.onchange=async()=>{try{await guardarAvisos({[i.dataset.k]:i.checked})}catch(e){i.checked=!i.checked;alert("No se ha podido guardar")}})}
+$("bAvisos").onclick=()=>{$("vAvisos").classList.add("on");pintarAvisos()};
+$("vAvisos").addEventListener("click",e=>{if(e.target===$("vAvisos")||e.target.closest("[data-cerrar]"))$("vAvisos").classList.remove("on")});
 mostrar();
+if(Nube.sesion())leerAvisos().then(estadoBoton);
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("/sw.js").catch(()=>{});
 </script>
 </body>
