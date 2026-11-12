@@ -160,27 +160,58 @@ $("bSalir").onclick=()=>{Nube.salir();localStorage.removeItem(LOCAL);mostrar()};
 let AV=null;
 async function leerAvisos(){try{const r=await Nube.api("ajustes_avisos?id=eq.1&select=*");AV=r&&r[0]||null}catch(e){AV=undefined}return AV}
 async function guardarAvisos(cambios){await Nube.api("ajustes_avisos?on_conflict=id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:1,app_url:location.origin,...cambios})});await leerAvisos()}
-function estadoBoton(){$("avEstado").textContent=AV&&AV.ntfy_tema?"Activados ✓":"Te avisa al llegar un contacto o cuando aceptan un presupuesto"}
+function estadoBoton(){pushActual().then(sub=>{$("avEstado").textContent=sub?"Activados en este dispositivo ✓":AV&&AV.ntfy_tema?"Activados con ntfy ✓":"Te avisa al llegar un contacto o cuando aceptan un presupuesto"})}
+// Notificaciones propias (Web Push)
+const VAPID=(window.ALMARA_CONFIG||{}).vapidPublicKey||"";
+const enApp=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const esIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const soportaPush=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const aBytes=b=>{const p="=".repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(r,c=>c.charCodeAt(0))};
+async function pushActual(){try{if(!soportaPush())return null;const r=await navigator.serviceWorker.getRegistration("/");return r?await r.pushManager.getSubscription():null}catch(e){return null}}
+async function contarPush(){try{const r=await Nube.api("push_subs?select=endpoint");return r.length}catch(e){return 0}}
+function nombreDisp(){const u=navigator.userAgent;return /iPhone/.test(u)?"iPhone":/iPad/.test(u)||esIOS()?"iPad":/Android/.test(u)?"Android":/Mac/.test(u)?"Mac":/Windows/.test(u)?"Windows":"Navegador"}
+async function guardarSub(sub){const j=sub.toJSON();await Nube.api("push_subs?on_conflict=endpoint",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
+  body:JSON.stringify({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,dispositivo:nombreDisp()})})}
+async function pintarPush(){const el=$("avPush");if(!el)return;const sub=await pushActual();
+  if(!VAPID){el.innerHTML=`<p style="color:var(--gris);font-size:14px">Falta la clave de notificaciones en config.js.</p>`;return}
+  if(!soportaPush()||(esIOS()&&!enApp())){el.innerHTML=esIOS()&&!enApp()
+    ?`<div class="estadoAv" style="background:#FFF8EC">Para recibir notificaciones de ALMARA en el iPhone, abre la app desde su <b>icono en la pantalla de inicio</b>, no desde Safari.<br><br>Si aún no lo tienes: en Safari pulsa <b>Compartir → Añadir a pantalla de inicio</b>, ábrela desde ese icono y vuelve aquí.</div>`
+    :`<div class="estadoAv" style="background:#FFF8EC">Este navegador no admite notificaciones. Usa la app añadida a la pantalla de inicio del iPhone (iOS 16.4 o posterior).</div>`;return}
+  if(sub&&Notification.permission==="granted"){el.innerHTML=`<div class="estadoAv" style="background:#E3F4EA">✓ Activadas en este ${esc(nombreDisp())}. Te llegarán con el icono de ALMARA aunque tengas la app cerrada.</div>
+    <button class="bt az" id="pProbar">Enviar aviso de prueba</button><button class="bt" id="pQuitar">Desactivar en este dispositivo</button><div id="pRes" style="font-size:13px;color:var(--gris);margin-top:6px"></div>`;
+    $("pProbar").onclick=async()=>{$("pRes").textContent="Enviando… Bloquea el móvil o sal al inicio para verlo.";try{const r=await Nube.api("rpc/probar_aviso",{method:"POST",body:"{}"});$("pRes").textContent=r==="ok"?"Enviado: te tiene que llegar en unos segundos.":"No hay dispositivos activados."}catch(e){$("pRes").textContent="No se ha podido enviar: "+e.message}};
+    $("pQuitar").onclick=async()=>{const j=sub.toJSON();await sub.unsubscribe().catch(()=>{});await Nube.api("push_subs?endpoint=eq."+encodeURIComponent(j.endpoint),{method:"DELETE"}).catch(()=>{});pintarAvisos()};
+    return}
+  if(Notification.permission==="denied"){el.innerHTML=`<div class="estadoAv" style="background:#FDECEC">Las notificaciones de ALMARA están bloqueadas. Actívalas en <b>Ajustes → Notificaciones → ALMARA</b> y vuelve aquí.</div>`;return}
+  el.innerHTML=`<p style="margin:0 0 8px;color:var(--gris);font-size:14px">Te llegarán al momento, con el icono de ALMARA y aunque tengas la app cerrada.</p><button class="bt az" id="pActivar">Activar notificaciones en este ${esc(nombreDisp())}</button><div id="pRes" style="font-size:13px;color:var(--gris);margin-top:6px"></div>`;
+  $("pActivar").onclick=async()=>{const res=$("pRes");try{res.textContent="Pidiendo permiso…";
+      const perm=await Notification.requestPermission();if(perm!=="granted"){res.textContent="No has dado permiso. Puedes activarlo en Ajustes → Notificaciones → ALMARA.";return}
+      const reg=await navigator.serviceWorker.register("/sw.js");await navigator.serviceWorker.ready;
+      const s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:aBytes(VAPID)});
+      await guardarSub(s);if(!AV)await guardarAvisos({});pintarAvisos()}
+    catch(e){res.textContent="No se ha podido activar: "+e.message}}}
 function nuevoCanal(){const a="abcdefghijkmnpqrstuvwxyz23456789",r=crypto.getRandomValues(new Uint8Array(14));return"almara-"+[...r].map(x=>a[x%a.length]).join("")}
 async function pintarAvisos(){const c=$("avCuerpo");
   if(!Nube.configurado()||!Nube.sesion()){c.innerHTML=`<p>Para recibir avisos tienes que tener la nube conectada y haber entrado con tu cuenta.</p>`;return}
   c.innerHTML=`<p style="color:var(--gris)">Cargando…</p>`;await leerAvisos();
   if(AV===undefined){c.innerHTML=`<div class="estadoAv" style="background:#FDECEC">No se han podido leer los ajustes. Comprueba que has ejecutado en Supabase el archivo <b>supabase3.sql</b> y que tienes conexión.</div>`;return}
   const t=AV&&AV.ntfy_tema;
-  let h=t?`<div class="estadoAv" style="background:#E3F4EA">✓ Avisos activados en el canal:</div><div class="canal">${esc(t)}</div>`
-    :`<p style="margin:0 0 6px;color:var(--gris);font-size:14px">Recibirás una notificación en el iPhone aunque no tengas la app de ALMARA abierta. Se hace una sola vez:</p>`;
+  const nPush=await contarPush();
+  let h=`<h3 style="margin:4px 0 6px">📱 Notificaciones de ALMARA</h3><div id="avPush"></div><h3 style="margin:22px 0 6px">Alternativa: app ntfy</h3>`;
+  h+=t?`<div class="estadoAv" style="background:#E3F4EA">✓ Avisos de ntfy activados en el canal:</div><div class="canal">${esc(t)}</div>`
+    :`<p style="margin:0 0 6px;color:var(--gris);font-size:14px">Si las notificaciones de ALMARA no te funcionan, puedes recibirlas con la app gratuita ntfy:</p>`;
   h+=`<div class="paso"><span class="n">1</span><div>Instala la app gratuita <b>ntfy</b>.<br><a class="bt" href="https://apps.apple.com/app/id1625396347" target="_blank" rel="noopener">Abrir en la App Store</a></div></div>
   <div class="paso"><span class="n">2</span><div>${t?"Tu canal privado ya está creado.":"Crea tu canal privado (un nombre secreto que solo conoces tú)."}<br>
     ${t?`<button class="bt" id="avCopiar">Copiar nombre del canal</button>`:`<button class="bt az" id="avCrear">Crear mi canal</button>`}</div></div>
   <div class="paso"><span class="n">3</span><div>Abre ntfy, pulsa <b>+</b>, pega el nombre del canal en «Topic name» y pulsa <b>Subscribe</b>. Cuando te pida permiso para notificaciones, pulsa <b>Permitir</b>.</div></div>
   <div class="paso"><span class="n">4</span><div>Comprueba que funciona.<br><button class="bt az" id="avProbar" ${t?"":"disabled style='opacity:.4'"}>Enviar aviso de prueba</button><span id="avRes" style="font-size:13px;color:var(--gris)"></span></div></div>`;
-  if(t)h+=`<h3 style="margin:16px 0 4px">Qué quieres que te avise</h3>
+  if(t||nPush)h+=`<h3 style="margin:16px 0 4px">Qué quieres que te avise</h3>
     <label class="sw"><span>📨 Contacto nuevo desde la web</span><input type="checkbox" data-k="contactos" ${AV.contactos?"checked":""}></label>
     <label class="sw"><span>✅ Presupuesto aceptado o rechazado</span><input type="checkbox" data-k="presupuestos" ${AV.presupuestos?"checked":""}></label>
     <label class="sw"><span>👀 El cliente abre el presupuesto</span><input type="checkbox" data-k="visto" ${AV.visto?"checked":""}></label>
     <p style="font-size:12px;color:var(--gris);line-height:1.4;margin-top:12px">Al tocar el aviso se abre la app en la pantalla correspondiente. Los avisos pasan por el servicio gratuito ntfy.sh; el nombre del canal es secreto, no lo compartas.</p>
-    <button class="bt" id="avCambiar" style="margin-top:6px">Cambiar el canal (si lo has compartido por error)</button>`;
-  c.innerHTML=h;estadoBoton();
+    ${t?`<button class="bt" id="avCambiar" style="margin-top:6px">Cambiar el canal de ntfy (si lo has compartido por error)</button>`:""}`;
+  c.innerHTML=h;estadoBoton();pintarPush();
   const crear=async()=>{try{await guardarAvisos({ntfy_tema:nuevoCanal()});pintarAvisos()}catch(e){alert("No se ha podido crear el canal: "+e.message)}};
   if($("avCrear"))$("avCrear").onclick=crear;
   if($("avCambiar"))$("avCambiar").onclick=async()=>{if(confirm("Se creará un canal nuevo y tendrás que suscribirte otra vez en ntfy. ¿Seguir?"))crear()};
@@ -190,7 +221,7 @@ async function pintarAvisos(){const c=$("avCuerpo");
 $("bAvisos").onclick=()=>{$("vAvisos").classList.add("on");pintarAvisos()};
 $("vAvisos").addEventListener("click",e=>{if(e.target===$("vAvisos")||e.target.closest("[data-cerrar]"))$("vAvisos").classList.remove("on")});
 mostrar();
-if(Nube.sesion())leerAvisos().then(estadoBoton);
+if(Nube.sesion())leerAvisos().then(estadoBoton).then(async()=>{const s=await pushActual();if(s&&Notification.permission==="granted")guardarSub(s).catch(()=>{})});
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("/sw.js").catch(()=>{});
 </script>
 </body>
