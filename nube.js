@@ -2,6 +2,18 @@
 "use strict";
 window.Nube = (() => {
   const C = window.ALMARA_CONFIG || {};
+  // ---------- Equipo: "ver como" (el administrador abre los datos de un técnico) ----------
+  // Mientras se ve a un técnico, sus datos se guardan en el móvil aparte de los tuyos.
+  const DATOS = ["almara-clientes-v1", "almara-planos-v1", "almara-pres-v1", "almara-material-v1",
+    "almara-ts-clientes", "almara-ts-planos", "almara-ts-presupuestos", "almara-ts-material", "almara-fotos-pend"];
+  const verComo = () => { try { return JSON.parse(sessionStorage.getItem("almara-ver")); } catch (e) { return null; } };
+  (() => {
+    const P = Storage.prototype, g = P.getItem, st = P.setItem, rm = P.removeItem;
+    const map = function (k) { const v = this === window.localStorage && DATOS.includes(k) && verComo(); return v ? "almara-ver-" + v.uid + "-" + k : k; };
+    P.getItem = function (k) { return g.call(this, map.call(this, k)); };
+    P.setItem = function (k, v) { return st.call(this, map.call(this, k), v); };
+    P.removeItem = function (k) { return rm.call(this, map.call(this, k)); };
+  })();
   const URLB = String(C.supabaseUrl || "").replace(/\/+$/, ""), KEY = String(C.supabaseAnonKey || "");
   const SK = "almara-sesion", PEND = "almara-fotos-pend";
   // Qué se sincroniza y dónde vive en el móvil
@@ -27,7 +39,45 @@ window.Nube = (() => {
       headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error_description || j.msg || j.error || ("Error " + r.status));
-    guardaSesion(j); return j;
+    // Si en este móvil había datos de otra cuenta, se borran (para no mezclarlos)
+    sessionStorage.removeItem("almara-ver");
+    const dueno = localStorage.getItem("almara-dueno");
+    if (dueno && dueno !== j.user.id) { for (const k of DATOS) localStorage.removeItem(k); localStorage.removeItem("almara-ts-empresa");
+      for (const k of ["almara-empresa-v1", "almara-tarifas-v1", "almara-contactos-cache", "almara-perfil"]) localStorage.removeItem(k); }
+    localStorage.setItem("almara-dueno", j.user.id);
+    guardaSesion(j); await cargarPerfil().catch(() => {}); return j;
+  }
+  // ---------- Perfil: administrador o técnico ----------
+  function perfil() {
+    const s = sesion(); let p = null;
+    try { p = JSON.parse(localStorage.getItem("almara-perfil")); } catch (e) {}
+    if (!s) return null;
+    if (!p || p.user_id !== s.user.id) return { user_id: s.user.id, rol: "admin", nombre: "", serie: "", provisional: true };
+    return p;
+  }
+  async function cargarPerfil() {
+    if (!configurado() || !sesion()) return perfil();
+    const r = await pedir("/rest/v1/rpc/mi_perfil", { method: "POST", headers: await cab({ "Content-Type": "application/json" }), body: "{}" });
+    if (r.status === 404) { localStorage.setItem("almara-perfil", JSON.stringify({ user_id: sesion().user.id, rol: "admin", nombre: "", serie: "" })); return perfil(); }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const p = await r.json(); localStorage.setItem("almara-perfil", JSON.stringify(p));
+    if (p.rol !== "admin") sessionStorage.removeItem("almara-ver");
+    return p;
+  }
+  const esAdmin = () => { const p = perfil(); return !p || p.rol === "admin"; };
+  const esTecnico = () => { const p = perfil(); return !!p && p.rol !== "admin"; };
+  // Serie de numeración (P-2026-J001): la del técnico, o la del técnico que estás viendo
+  const serie = () => { const v = verComo(); if (v) return v.serie || ""; const p = perfil(); return p && p.rol !== "admin" ? (p.serie || "") : ""; };
+  const objetivo = () => { const v = verComo(); return v ? v.uid : sesion().user.id; };
+  function ver(m) { // m = {uid, nombre, serie} o null para volver a lo tuyo
+    if (m) sessionStorage.setItem("almara-ver", JSON.stringify({ uid: m.uid, nombre: m.nombre, serie: m.serie || "" }));
+    else sessionStorage.removeItem("almara-ver");
+  }
+  // Solo para páginas del administrador (contactos, estadísticas)
+  function soloAdmin() {
+    if (esTecnico()) { location.replace("/"); return false; }
+    cargarPerfil().then(p => { if (p && p.rol !== "admin") location.replace("/"); }).catch(() => {});
+    return true;
   }
   async function token() {
     const s = sesion();
@@ -40,7 +90,26 @@ window.Nube = (() => {
     const j = await r.json(); guardaSesion(j); return j.access_token;
   }
   const cab = async extra => ({ apikey: KEY, Authorization: "Bearer " + await token(), ...extra });
+  // Lista del equipo (solo administrador)
+  async function equipo() { return api("equipo?select=user_id,email,nombre,rol,serie&order=creado"); }
+  // Datos de todos (solo administrador): {user_id: {clave: valor}}
+  async function datosEquipo(claves) {
+    const filas = await api("datos?select=user_id,clave,valor&clave=in.(" + claves.join(",") + ")"), o = {};
+    for (const f of filas) (o[f.user_id] = o[f.user_id] || {})[f.clave] = f.valor;
+    return o;
+  }
+  // Aviso fijo arriba mientras ves los datos de un técnico
+  function bandaVer() {
+    const v = verComo(); if (!v || document.getElementById("bandaVer")) return;
+    const b = document.createElement("a"); b.id = "bandaVer"; b.href = "#";
+    b.style.cssText = "position:fixed;z-index:9999;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 2px);background:#E8730C;color:#fff;font:700 12px -apple-system,Helvetica,Arial,sans-serif;padding:5px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.25);white-space:nowrap;text-decoration:none";
+    b.textContent = "👁 Viendo a " + v.nombre + " · Volver a lo mío";
+    b.onclick = e => { e.preventDefault(); ver(null); location.href = "/"; };
+    document.body.appendChild(b);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bandaVer); else setTimeout(bandaVer);
   function salir() {
+    sessionStorage.removeItem("almara-ver");
     const s = sesion();
     if (s && configurado()) pedir("/auth/v1/logout", { method: "POST", headers: { apikey: KEY, Authorization: "Bearer " + s.access_token } }).catch(() => {});
     setSesion(null);
@@ -79,10 +148,11 @@ window.Nube = (() => {
     clearTimeout(tim[k]); tim[k] = setTimeout(() => subir(k).catch(() => {}), 1500);
   }
   async function subir(k) {
+    if (k === "empresa" && (esTecnico() || verComo())) return;
     const valor = leer(k); if (valor == null) return;
     const r = await pedir("/rest/v1/datos?on_conflict=user_id,clave", { method: "POST",
       headers: await cab({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }),
-      body: JSON.stringify({ clave: k, valor, actualizado: new Date(ts(k) || Date.now()).toISOString() }) }, 20000);
+      body: JSON.stringify({ user_id: objetivo(), clave: k, valor, actualizado: new Date(ts(k) || Date.now()).toISOString() }) }, 20000);
     if (!r.ok) { estado("No se ha podido guardar en la nube", PENDIENTE); throw new Error(await r.text()); }
     estado("Guardado en la nube", OK);
   }
@@ -90,13 +160,28 @@ window.Nube = (() => {
   async function sincronizar(claves) {
     claves = claves || Object.keys(CLAVES);
     if (!configurado() || !sesion()) return [];
+    if (verComo()) claves = claves.filter(k => k !== "empresa");
+    if (!claves.length) return [];
     const cambiadas = [];
     try {
-      const r = await pedir("/rest/v1/datos?select=clave,valor,actualizado&clave=in.(" + claves.join(",") + ")", { headers: await cab() });
+      await cargarPerfil().catch(() => {});
+      const tec = esTecnico(), yo = objetivo();
+      // El técnico ve sus filas y la de empresa del administrador; el administrador filtra por la persona
+      const r = await pedir("/rest/v1/datos?select=user_id,clave,valor,actualizado&clave=in.(" + claves.join(",") + ")" + (tec ? "" : "&user_id=eq." + yo), { headers: await cab() });
       if (!r.ok) throw new Error("HTTP " + r.status);
       const filas = await r.json(), rem = {};
-      for (const f of filas) rem[f.clave] = f;
+      for (const f of filas) {
+        if (tec && f.clave === "empresa") { if (f.user_id !== yo) rem.empresa = f; continue; }
+        if (f.user_id && f.user_id !== yo) continue;
+        rem[f.clave] = f;
+      }
+      if (!localStorage.getItem("almara-dueno")) localStorage.setItem("almara-dueno", sesion().user.id);
       for (const k of claves) {
+        if (tec && k === "empresa") { // tarifas y datos de empresa: siempre los del administrador
+          const f = rem.empresa;
+          if (f && Date.parse(f.actualizado) !== ts(k)) { escribir(k, f.valor); setTs(k, Date.parse(f.actualizado)); cambiadas.push(k); }
+          continue;
+        }
         const loc = ts(k), f = rem[k], tr = f ? Date.parse(f.actualizado) : 0;
         if (f && tr > loc) { escribir(k, f.valor); setTs(k, tr); cambiadas.push(k); }
         else if (loc > tr && leer(k) != null) await subir(k);
@@ -112,7 +197,7 @@ window.Nube = (() => {
   // ---------- Fotos (Supabase Storage, carpeta privada del usuario) ----------
   const pend = () => { try { return JSON.parse(localStorage.getItem(PEND)) || []; } catch (e) { return []; } };
   const setPend = a => localStorage.setItem(PEND, JSON.stringify([...new Set(a)]));
-  const ruta = id => `fotos/${sesion().user.id}/${encodeURIComponent(id)}.jpg`;
+  const ruta = id => `fotos/${objetivo()}/${encodeURIComponent(id)}.jpg`;
   async function subirFoto(id, blob) {
     if (!configurado() || !sesion()) return;
     try {
@@ -153,6 +238,7 @@ window.Nube = (() => {
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
   }
-  return { api, rpcPublica, configurado, sesion, entrar, salir, requerir, marcar, sincronizar, subirFoto, bajarFoto, borrarFoto, reintentarFotos,
+  return { perfil, cargarPerfil, esAdmin, esTecnico, serie, ver, verComo, soloAdmin, equipo, datosEquipo, yo: () => sesion() && sesion().user.id,
+    api, rpcPublica, configurado, sesion, entrar, salir, requerir, marcar, sincronizar, subirFoto, bajarFoto, borrarFoto, reintentarFotos,
     clientes, estado: () => est, CLAVES };
 })();

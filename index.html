@@ -17,6 +17,7 @@
 :root{--azul:#0B1F3A;--acento:#1E88E5;--gris:#5F6B7A;--claro:#EEF2F7;--borde:#D6DEE8;--rojo:#C62828;--nar:#E8730C;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:var(--azul);background:#F3F6FA}
+[hidden]{display:none!important}
 button{font:inherit;border:0;cursor:pointer}
 a{color:inherit;text-decoration:none}
 /* Portada de acceso */
@@ -95,16 +96,18 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
       <a class="tile nuevo" href="/planos/?nuevo=pres"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo presupuesto</b><small>En PDF para enviar</small></a>
       <a class="tile" href="/clientes/?vista=partes"><span class="ic" style="background:#F1E8F8">📝</span><b>Partes de trabajo</b><small id="nPar">Con firma del cliente</small></a>
       <a class="tile nuevo" href="/clientes/?parte=nuevo"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo parte</b><small>Al terminar un trabajo</small></a>
-      <a class="tile" href="/contactos/"><span class="ic" style="background:#E3F0FC">📨</span><b>Contactos web</b><small id="nCon">Peticiones de la web</small></a>
-      <a class="tile" href="/estadisticas/"><span class="ic" style="background:#E3F4EA">📊</span><b>Estadísticas</b><small>Cómo va el negocio</small></a>
+      <a class="tile" id="tCon" href="/contactos/"><span class="ic" style="background:#E3F0FC">📨</span><b>Contactos web</b><small id="nCon">Peticiones de la web</small></a>
+      <a class="tile" id="tEst" href="/estadisticas/"><span class="ic" style="background:#E3F4EA">📊</span><b>Estadísticas</b><small>Cómo va el negocio</small></a>
       <a class="tile" href="/material/"><span class="ic" style="background:#FFF1E3">📦</span><b>Material</b><small id="nMat">Furgoneta e inventario</small></a>
     </div>
     <div id="avisos"></div>
     <button class="avisosBtn" id="bAvisos"><span class="ic">🔔</span><span><b>Avisos al móvil</b><small id="avEstado">Te avisa al llegar un contacto o cuando aceptan un presupuesto</small></span></button>
+    <button class="avisosBtn" id="bEquipo" hidden><span class="ic">👷</span><span><b>Equipo</b><small id="eqEstado">Añade a un compañero y mira lo que hace</small></span></button>
     <button class="salir" id="bSalir">Cerrar sesión</button>
   </main>
 </section>
 
+<div class="velo" id="vEquipo"><div class="hoja"><h2>👷 Equipo <button data-cerrar>×</button></h2><div id="eqCuerpo"></div></div></div>
 <div class="velo" id="vAvisos"><div class="hoja"><h2>🔔 Avisos al móvil <button data-cerrar>×</button></h2><div id="avCuerpo"></div></div></div>
 <script src="/config.js"></script>
 <script src="/nube.js"></script>
@@ -124,11 +127,13 @@ function mostrar(){
   if(!dentro()){$("acceso").style.display="flex";$("inicio").style.display="none";$("avisoConf").hidden=Nube.configurado();return}
   if(volver&&volver.startsWith("/")&&!volver.startsWith("//")){location.replace(volver);return}
   $("acceso").style.display="none";$("inicio").style.display="block";pintarInicio();
-  Nube.sincronizar().then(async()=>{try{if(Nube.sesion()){const c=await Nube.api("contactos?select=*&order=creado.desc&limit=500");localStorage.setItem("almara-contactos-cache",JSON.stringify(c))}}catch(e){}pintarInicio();estadoNube()});
+  Nube.cargarPerfil().catch(()=>{}).then(()=>{pintarInicio();return Nube.sincronizar()}).then(async()=>{try{if(Nube.sesion()&&Nube.esAdmin()){const c=await Nube.api("contactos?select=*&order=creado.desc&limit=500");localStorage.setItem("almara-contactos-cache",JSON.stringify(c))}}catch(e){}pintarInicio();estadoNube()});
 }
 function estadoNube(){const e=Nube.estado();$("nubeTxt").innerHTML=Nube.configurado()?`<span style="color:${e.c||"#9FB4CF"}">☁︎</span> ${esc(e.t||"Conectando…")}<br><small>${esc((Nube.sesion()||{user:{}}).user.email||"")}</small>`:"Solo en este móvil"}
 function pintarInicio(){
-  const h=new Date().getHours();$("saludo").textContent=(h<13?"Buenos días":h<21?"Buenas tardes":"Buenas noches")+", Alin";
+  const h=new Date().getHours(),pf=Nube.perfil()||{},adm=Nube.esAdmin(),vc=Nube.verComo();
+  $("saludo").textContent=vc?"Datos de "+vc.nombre:(h<13?"Buenos días":h<21?"Buenas tardes":"Buenas noches")+", "+(pf.nombre||"Alin");
+  $("tCon").hidden=$("tEst").hidden=!adm;$("bEquipo").hidden=!adm||!Nube.configurado();
   const cl=(lee("almara-clientes-v1")||{}).clientes||[],pl=(lee("almara-planos-v1")||{}).proy||[],pr=(lee("almara-pres-v1")||{}).lista||[];
   if(cl.length)$("nCli").textContent=cl.length+" cliente"+(cl.length>1?"s":"");
   if(pl.length)$("nPla").textContent=pl.length+" plano"+(pl.length>1?"s":"");
@@ -138,7 +143,7 @@ function pintarInicio(){
     if(m.proxima&&dias(m.proxima)<=30)av.push({c,d:dias(m.proxima),t:"Revisión"});if(m.fin&&dias(m.fin)<=30)av.push({c,d:dias(m.fin),t:"Renovar contrato"})}
   av.sort((a,b)=>a.d-b.d);
   // Otros avisos: contactos nuevos, presupuestos aceptados, material bajo e inventario del mes
-  const ct=lee("almara-contactos-cache")||[],ctN=ct.filter(c=>c.estado==="nuevo").length;$("nCon").textContent=ctN?ctN+" nuevo"+(ctN>1?"s":"")+" sin atender":"Peticiones de la web";
+  const ct=adm?lee("almara-contactos-cache")||[]:[],ctN=ct.filter(c=>c.estado==="nuevo").length;$("nCon").textContent=ctN?ctN+" nuevo"+(ctN>1?"s":"")+" sin atender":"Peticiones de la web";
   const mat=lee("almara-material-v1")||{items:[],inventarios:[]},bajo=(mat.items||[]).filter(i=>i.min>0&&i.stock<=i.min),mes=hoy().slice(0,7),inv=(mat.inventarios||[]).some(v=>v.mes===mes);
   if((mat.items||[]).length)$("nMat").textContent=bajo.length?bajo.length+" por reponer":(inv?"Inventario al día":"Inventario del mes pendiente");
   const otros=[];if(ctN)otros.push(`<a href="/contactos/"><span>📨 ${ctN} contacto${ctN>1?"s":""} nuevo${ctN>1?"s":""} de la web</span><b style="color:var(--acento)">Ver</b></a>`);
@@ -188,12 +193,14 @@ async function pintarPush(){const el=$("avPush");if(!el)return;const sub=await p
       const perm=await Notification.requestPermission();if(perm!=="granted"){res.textContent="No has dado permiso. Puedes activarlo en Ajustes → Notificaciones → ALMARA.";return}
       const reg=await navigator.serviceWorker.register("/sw.js");await navigator.serviceWorker.ready;
       const s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:aBytes(VAPID)});
-      await guardarSub(s);if(!AV)await guardarAvisos({});pintarAvisos()}
+      await guardarSub(s);if(!AV&&Nube.esAdmin())await guardarAvisos({}).catch(()=>{});pintarAvisos()}
     catch(e){res.textContent="No se ha podido activar: "+e.message}}}
 function nuevoCanal(){const a="abcdefghijkmnpqrstuvwxyz23456789",r=crypto.getRandomValues(new Uint8Array(14));return"almara-"+[...r].map(x=>a[x%a.length]).join("")}
 async function pintarAvisos(){const c=$("avCuerpo");
   if(!Nube.configurado()||!Nube.sesion()){c.innerHTML=`<p>Para recibir avisos tienes que tener la nube conectada y haber entrado con tu cuenta.</p>`;return}
-  c.innerHTML=`<p style="color:var(--gris)">Cargando…</p>`;await leerAvisos();
+  c.innerHTML=`<p style="color:var(--gris)">Cargando…</p>`;
+  if(Nube.esTecnico()){c.innerHTML=`<p style="margin:0 0 8px;color:var(--gris);font-size:14px">Te avisará cuando un cliente abra, acepte o rechace uno de tus presupuestos.</p><div id="avPush"></div>`;pintarPush();return}
+  await leerAvisos();
   if(AV===undefined){c.innerHTML=`<div class="estadoAv" style="background:#FDECEC">No se han podido leer los ajustes. Comprueba que has ejecutado en Supabase el archivo <b>supabase3.sql</b> y que tienes conexión.</div>`;return}
   const t=AV&&AV.ntfy_tema;
   const nPush=await contarPush();
@@ -220,6 +227,40 @@ async function pintarAvisos(){const c=$("avCuerpo");
   c.querySelectorAll("[data-k]").forEach(i=>i.onchange=async()=>{try{await guardarAvisos({[i.dataset.k]:i.checked})}catch(e){i.checked=!i.checked;alert("No se ha podido guardar")}})}
 $("bAvisos").onclick=()=>{$("vAvisos").classList.add("on");pintarAvisos()};
 $("vAvisos").addEventListener("click",e=>{if(e.target===$("vAvisos")||e.target.closest("[data-cerrar]"))$("vAvisos").classList.remove("on")});
+// ---------- Equipo (solo administrador) ----------
+async function pintarEquipo(){const c=$("eqCuerpo");c.innerHTML=`<p style="color:var(--gris)">Cargando…</p>`;let L;
+  try{L=await Nube.equipo()}catch(e){c.innerHTML=`<div class="estadoAv" style="background:#FDECEC">No se ha podido leer el equipo. Comprueba que has ejecutado en Supabase el archivo <b>supabase5.sql</b>.</div>`;return}
+  const yo=Nube.yo(),vc=Nube.verComo();
+  let h=`<p style="margin:0 0 6px;color:var(--gris);font-size:14px;line-height:1.45">Cada técnico ve solo sus clientes, planos, presupuestos, partes y el material de su furgoneta. No ve los contactos de la web ni las estadísticas. Tú lo ves todo.</p>`;
+  for(const m of L){const esYo=m.user_id===yo,baja=m.rol==="baja";
+    h+=`<div class="sw" style="align-items:flex-start"><span><b>${esc(m.nombre)}</b>${esYo?" (tú)":""}${baja?` <span style="color:var(--rojo);font-size:12px;font-weight:700">DE BAJA</span>`:""}<br><small style="color:var(--gris)">${esc(m.email)}${m.serie?" · serie "+esc(m.serie)+" (P-"+new Date().getFullYear()+"-"+esc(m.serie)+"001)":""}</small></span>
+      ${esYo?"":`<span style="text-align:right;flex:none"><button class="bt az" data-ver="${esc(m.user_id)}">${vc&&vc.uid===m.user_id?"Viendo ✓":"Ver sus datos"}</button><br><button class="bt" data-baja="${esc(m.user_id)}" data-act="${baja?1:0}">${baja?"Reactivar":"Dar de baja"}</button></span>`}</div>`}
+  if(vc)h+=`<button class="bt" id="eqVolver" style="margin-top:8px">← Volver a mis datos</button>`;
+  h+=`<h3 style="margin:22px 0 6px">Añadir un compañero</h3>
+  <div class="paso"><span class="n">1</span><div>En <b>Supabase → Authentication → Users</b> pulsa <b>Add user → Create new user</b>. Pon su correo y una contraseña, marca <b>Auto Confirm User</b> y pulsa <b>Create user</b>.</div></div>
+  <div class="paso"><span class="n">2</span><div>Rellena esto y pulsa <b>Añadir</b>:
+    <input id="eqNom" placeholder="Nombre (ej. Juan)" style="display:block;width:100%;margin-top:8px;padding:11px;border:1px solid var(--borde);border-radius:10px;font:inherit;font-size:16px">
+    <input id="eqMail" type="email" inputmode="email" placeholder="Su correo (el mismo del paso 1)" style="display:block;width:100%;margin-top:6px;padding:11px;border:1px solid var(--borde);border-radius:10px;font:inherit;font-size:16px">
+    <input id="eqSerie" maxlength="3" placeholder="Letra para sus números (ej. J)" style="display:block;width:100%;margin-top:6px;padding:11px;border:1px solid var(--borde);border-radius:10px;font:inherit;font-size:16px;text-transform:uppercase">
+    <small style="color:var(--gris);display:block;margin-top:4px">Sus presupuestos saldrán como P-${new Date().getFullYear()}-J001 y sus partes como PT-${new Date().getFullYear()}-J001, para que no se mezclen con los tuyos.</small>
+    <button class="bt az" id="eqAdd" style="margin-top:8px">Añadir</button><div id="eqRes" style="font-size:13.5px;margin-top:6px"></div></div></div>
+  <div class="paso"><span class="n">3</span><div>Pásale la dirección de la app y su contraseña. Que entre con su correo y añada ALMARA a su pantalla de inicio.</div></div>`;
+  c.innerHTML=h;
+  c.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>{const m=L.find(x=>x.user_id===b.dataset.ver);Nube.ver({uid:m.user_id,nombre:m.nombre,serie:m.serie});location.href="/"});
+  c.querySelectorAll("[data-baja]").forEach(b=>b.onclick=async()=>{const act=b.dataset.act==="1",m=L.find(x=>x.user_id===b.dataset.baja);
+    if(!act&&!confirm(`¿Dar de baja a ${m.nombre}? No podrá entrar ni ver nada. Sus clientes y presupuestos se quedan guardados para ti.`))return;
+    try{await Nube.api("rpc/cambiar_estado_tecnico",{method:"POST",body:JSON.stringify({p_user:m.user_id,p_activo:act})});pintarEquipo()}catch(e){alert("No se ha podido cambiar: "+e.message)}});
+  if($("eqVolver"))$("eqVolver").onclick=()=>{Nube.ver(null);location.href="/"};
+  $("eqAdd").onclick=async()=>{const res=$("eqRes"),nom=$("eqNom").value.trim(),mail=$("eqMail").value.trim(),se=$("eqSerie").value.trim().toUpperCase();
+    if(!nom||!mail){res.style.color="var(--rojo)";res.textContent="Pon el nombre y el correo.";return}
+    if(!/^[A-Z]{1,3}$/.test(se)){res.style.color="var(--rojo)";res.textContent="La letra tiene que ser de 1 a 3 letras (sin acentos ni números).";return}
+    res.style.color="var(--gris)";res.textContent="Añadiendo…";
+    try{const r=await Nube.api("rpc/guardar_tecnico",{method:"POST",body:JSON.stringify({p_email:mail,p_nombre:nom,p_serie:se})});
+      const msg={ok:"",no_existe:"No hay ningún usuario con ese correo. Primero créalo en Supabase (paso 1).",eres_tu:"Ese correo es el tuyo.",serie_repetida:"Esa letra ya la usa otra persona. Elige otra.",falta_serie:"Falta la letra."}[r];
+      if(r==="ok")pintarEquipo();else{res.style.color="var(--rojo)";res.textContent=msg||r}}
+    catch(e){res.style.color="var(--rojo)";res.textContent="No se ha podido añadir: "+e.message}}}
+$("bEquipo").onclick=()=>{$("vEquipo").classList.add("on");pintarEquipo()};
+$("vEquipo").addEventListener("click",e=>{if(e.target===$("vEquipo")||e.target.closest("[data-cerrar]"))$("vEquipo").classList.remove("on")});
 mostrar();
 if(Nube.sesion())leerAvisos().then(estadoBoton).then(async()=>{const s=await pushActual();if(s&&Notification.permission==="granted")guardarSub(s).catch(()=>{})});
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("/sw.js").catch(()=>{});
