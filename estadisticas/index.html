@@ -30,7 +30,7 @@
 <script src="/config.js"></script><script src="/nube.js"></script>
 <script>
 "use strict";
-if(!Nube.requerir())throw new Error("Hay que iniciar sesión");
+if(!Nube.requerir()||!Nube.soloAdmin())throw new Error("Solo el administrador");
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const lee=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
@@ -38,7 +38,7 @@ const r2=v=>Math.round(v*100)/100;
 const eur=(v,d)=>{const s=(d===0?Math.round(v).toString():r2(v).toFixed(2));const [a,b]=s.split(".");return a.replace(/\B(?=(\d{3})+(?!\d))/g,".")+(b?","+b:"")+" €"};
 const eurC=v=>v>=10000?(Math.round(v/100)/10).toString().replace(".",",")+"k €":eur(v,0);
 const MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-let periodo="12m";
+let periodo="12m",persona="todos";
 // Mismo cálculo que los PDF de presupuesto
 function totalPres(pr){const part=pr.tipo!=="empresa";let base=0,tci=0;for(const x of pr.partidas||[]){const q=+x.q||0;let bu,fijo=null;if(x.iva!=null){fijo=+x.iva;bu=fijo/1.21}else bu=+x.p||0;bu=r2(bu);const bl=r2(bu*q);base+=bl;tci+=fijo!==null?r2(fijo*q):r2(bl*1.21)}
   base=r2(base);return{base,total:part?r2(tci):r2(base+r2(base*.21))}}
@@ -59,7 +59,15 @@ function niceStep(max){const raw=max/4,p=Math.pow(10,Math.floor(Math.log10(raw))
 function barras(datos,fmtv){const max=Math.max(1,...datos.map(d=>d.v));return datos.map(d=>`<div class="hb"><span title="${esc(d.l)}">${esc(d.l)}</span><div class="bar"><i style="width:${Math.max(.5,d.v/max*100)}%"></i></div><b>${esc(fmtv(d.v))}</b></div>`).join("")}
 const tabla=(datos,fmtv)=>`<details><summary>Ver tabla</summary><table>${datos.map(d=>`<tr><td>${esc(d.l)}</td><td>${esc(fmtv(d.v))}</td></tr>`).join("")}</table></details>`;
 async function pintar(){
-  const cl=(lee("almara-clientes-v1")||{}).clientes||[],pr=(lee("almara-pres-v1")||{}).lista||[];let ct=lee("almara-contactos-cache")||[];
+  // Equipo: tus datos (de este móvil) y los de cada técnico (de la nube)
+  const EQ=lee("almara-equipo-cache"),yo=Nube.yo(),hayEq=!!(EQ&&EQ.miembros&&EQ.miembros.length>1);
+  const de=uid=>uid===yo&&!Nube.verComo()?{c:(lee("almara-clientes-v1")||{}).clientes||[],p:(lee("almara-pres-v1")||{}).lista||[]}
+    :{c:(((EQ&&EQ.datos[uid])||{}).clientes||{}).clientes||[],p:(((EQ&&EQ.datos[uid])||{}).presupuestos||{}).lista||[]};
+  let cl=[],pr=[];const porMiembro=[];
+  if(hayEq){if(persona!=="todos"&&!EQ.miembros.some(m=>m.user_id===persona))persona="todos";
+    for(const m of EQ.miembros){const d=de(m.user_id);porMiembro.push({m,d});if(persona==="todos"||persona===m.user_id){cl=cl.concat(d.c);pr=pr.concat(d.p)}}}
+  else{cl=(lee("almara-clientes-v1")||{}).clientes||[];pr=(lee("almara-pres-v1")||{}).lista||[]}
+  let ct=lee("almara-contactos-cache")||[];
   const [d0,d1]=rango(),en=f=>f&&f>=d0&&f<=d1;
   const partes=[];for(const c of cl)for(const t of c.trabajos||[])partes.push({c,t,imp:parseFloat(String(t.importe||"").replace(",","."))||0});
   const P=partes.filter(p=>en(p.t.fecha)),fact=P.reduce((s,p)=>s+p.imp,0),conImp=P.filter(p=>p.imp>0);
@@ -68,6 +76,7 @@ async function pintar(){
   const mant=cl.filter(c=>c.mant&&c.mant.activo),cuota=mant.reduce((s,c)=>s+(parseFloat(String(c.mant.cuota||"").replace(",","."))||0),0);
   const etq={"12m":"Últimos 12 meses","ano":"Este año","todo":"Desde el principio"}[periodo];
   let h=`<div class="chips">${[["12m","Últimos 12 meses"],["ano","Este año"],["todo","Todo"]].map(([k,l])=>`<button data-p="${k}" class="${periodo===k?"on":""}">${l}</button>`).join("")}</div>
+  ${hayEq?`<div class="chips">${[["todos","Todo el equipo"]].concat(EQ.miembros.map(m=>[m.user_id,m.nombre+(m.rol==="baja"?" (baja)":"")])).map(([k,l])=>`<button data-per="${esc(k)}" class="${persona===k?"on":""}">${esc(l)}</button>`).join("")}</div>`:""}
   <div class="kpis">
     <div class="kpi"><small>Importe en partes</small><b>${eur(fact,0)}</b><span>${P.length} parte${P.length===1?"":"s"}${conImp.length?" · media "+eur(fact/conImp.length,0):""}</span></div>
     <div class="kpi"><small>Presupuestos</small><b>${PR.length}</b><span>${eur(PR.reduce((s,p)=>s+totalPres(p).total,0),0)} presupuestado</span></div>
@@ -76,6 +85,9 @@ async function pintar(){
     <div class="kpi"><small>Contactos web</small><b>${CT.length}</b><span>${CT.length?Math.round(ctCli.length/CT.length*100)+" % pasados a cliente":"Aún no han llegado"}</span></div>
     <div class="kpi"><small>Mantenimientos</small><b>${mant.length}</b><span>${cuota?eur(cuota)+" / mes + IVA":"Sin cuotas apuntadas"}</span></div>
   </div>`;
+  // Por técnico
+  if(hayEq&&persona==="todos"){const T=porMiembro.map(({m,d})=>{let v=0,n=0;for(const c of d.c)for(const t of c.trabajos||[])if(en(t.fecha)){v+=parseFloat(String(t.importe||"").replace(",","."))||0;n++}return{l:m.nombre,v,n}}).sort((a,b)=>b.v-a.v);
+    h+=`<h3>Equipo</h3><div class="graf"><h4>Importe en partes por persona</h4><p class="sub">${etq}</p>${barras(T,v=>eur(v,0))}${tabla(T.map(t=>({l:t.l+" ("+t.n+" partes)",v:t.v})),v=>eur(v))}</div>`}
   // Por mes
   const M=meses().map(m=>({k:m,l:MES[+m.slice(5)-1]+" "+m.slice(0,4),v:partes.filter(p=>String(p.t.fecha).slice(0,7)===m).reduce((s,p)=>s+p.imp,0)}));
   h+=`<h3>Por meses</h3><div class="graf"><h4>Importe de los partes por mes</h4><p class="sub">${periodo==="todo"?"Últimos 12 meses":etq}</p>${columnas("Importe por mes",M,(v,c)=>c?eurC(v):eur(v))}${tabla(M,v=>eur(v))}<div class="tip"></div></div>`;
@@ -99,13 +111,16 @@ async function pintar(){
   if(TC.length)h+=`<h3>Mejores clientes</h3><div class="graf"><h4>Por importe en partes</h4><p class="sub">${etq}</p>${barras(TC,v=>eur(v,0))}</div>`;
   h+=`<p class="nota">Las cifras salen del importe que apuntas en cada parte de trabajo y de los presupuestos guardados. Para que sean fiables, pon el importe en todos los partes.</p>`;
   $("main").innerHTML=h}
-$("main").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(b){periodo=b.dataset.p;pintar()}});
+$("main").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(b){periodo=b.dataset.p;pintar()}const q=e.target.closest("[data-per]");if(q){persona=q.dataset.per;pintar()}});
 // Tooltip al tocar o pasar por una columna
 function tip(e){const r=e.target.closest("[data-tip]"),g=e.target.closest(".graf");document.querySelectorAll(".tip").forEach(t=>{if(!g||t.parentNode!==g)t.style.display="none"});if(!r||!g)return;
   const t=g.querySelector(".tip"),svg=g.querySelector("svg"),sc=svg.getBoundingClientRect().width/340,gr=g.getBoundingClientRect(),sr=svg.getBoundingClientRect();
   t.textContent=r.dataset.tip;t.style.left=(sr.left-gr.left+(+r.dataset.x)*sc)+"px";t.style.top=(sr.top-gr.top+(+r.dataset.y)*sc-6)+"px";t.style.display="block"}
 $("main").addEventListener("pointermove",tip);$("main").addEventListener("click",tip);
 pintar();
+async function cargarEquipo(){try{const miembros=await Nube.equipo();if(miembros.length<2){localStorage.removeItem("almara-equipo-cache");return}
+  const datos=await Nube.datosEquipo(["clientes","presupuestos"]);localStorage.setItem("almara-equipo-cache",JSON.stringify({miembros,datos}));pintar()}catch(e){}}
+if(Nube.sesion()&&Nube.configurado())cargarEquipo();
 Nube.sincronizar(["clientes","presupuestos"]).then(async ch=>{if(Nube.sesion()&&Nube.configurado()){try{const c=await Nube.api("contactos?select=*&order=creado.desc&limit=500");localStorage.setItem("almara-contactos-cache",JSON.stringify(c));ch.push("c")}catch(e){}}if(ch.length)pintar()});
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("/sw.js").catch(()=>{});
 </script>
