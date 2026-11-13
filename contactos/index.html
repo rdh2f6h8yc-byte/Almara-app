@@ -27,7 +27,7 @@
 <script src="/config.js"></script><script src="/nube.js"></script>
 <script>
 "use strict";
-if(!Nube.requerir())throw new Error("Hay que iniciar sesión");
+if(!Nube.requerir()||!Nube.soloAdmin())throw new Error("Solo el administrador");
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const aviso=(t,ms)=>{const a=$("aviso");a.textContent=t;a.style.display=t?"block":"none";clearTimeout(aviso.t);if(t)aviso.t=setTimeout(()=>a.style.display="none",ms||1800)};
