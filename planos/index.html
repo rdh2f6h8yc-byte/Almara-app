@@ -813,9 +813,9 @@ const num=v=>parseFloat(String(v).replace(",","."));
 const hoy=()=>new Date().toISOString().slice(0,10);
 const fechaES=f=>{const [a,m,d]=f.split("-");return `${d}/${m}/${a}`};
 const masDias=(f,n)=>{const d=new Date(f+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
-function siguienteNumero(){const y=new Date().getFullYear();let mx=PR.sig-1;
-  for(const p of PR.lista){const m=/^P-(\d{4})-(\d+)$/.exec(p.numero||"");if(m&&+m[1]===y)mx=Math.max(mx,+m[2])}
-  return `P-${y}-${String(mx+1).padStart(3,"0")}`}
+function siguienteNumero(){const y=new Date().getFullYear(),se=Nube.serie();let mx=se?0:PR.sig-1;
+  for(const p of PR.lista){const m=/^P-(\d{4})-([A-Z]*)(\d+)$/.exec(p.numero||"");if(m&&+m[1]===y&&m[2]===se)mx=Math.max(mx,+m[3])}
+  return `P-${y}-${se}${String(mx+1).padStart(3,"0")}`}
 function nuevoPres(){const p={id:uid(),numero:siguienteNumero(),fecha:hoy(),tipo:"particular",titulo:"",cliente:{nombre:"",nif:"",direccion:"",contacto:"",telefono:"",email:""},partidas:[],notas:[]};PR.lista.unshift(p);guardarPres();return p}
 function partidaDe(t,q){const o={id:uid(),c:t.c,d:t.d||"",q:q||1};if(t.iva!==undefined)o.iva=t.iva;else o.p=t.p;return o}
 function agregar(pr,t,q,concepto){if(!t||!(q>0))return;const c=concepto||t.c;const ex=pr.partidas.find(x=>x.c===c&&(x.iva??null)===(t.iva??null)&&(x.p??null)===(t.p??null));
@@ -988,7 +988,7 @@ function listaPres(){prCur=null;const tot=p=>calcular(p).total;let h=`<div class
   <h3>Presupuestos guardados</h3>`;
   if(!PR.lista.length)h+=`<p class="vacio">Todavía no hay presupuestos en este móvil.</p>`;
   for(const p of PR.lista)h+=`<div class="fila tarjeta" data-abrir="${p.id}"><div class="q"><b>${esc(p.numero)} · ${esc(p.cliente.nombre||"Sin cliente")}</b><small>${esc(p.titulo||"Sin título")} · ${fechaES(p.fecha)}</small>${etiquetaEnlace(p)}</div><b class="imp">${eur(tot(p))}</b></div>`;
-  h+=`<button class="big" data-pa="ajustes" style="margin-top:18px">⚙ Datos de empresa, firma y tarifas</button></div>`;
+  h+=Nube.esTecnico()||Nube.verComo()?`</div>`:`<button class="big" data-pa="ajustes" style="margin-top:18px">⚙ Datos de empresa, firma y tarifas</button></div>`;
   $("pres").innerHTML=h;$("nomProy").textContent="Presupuestos";$("pres").scrollTop=0}
 function editorPres(){const p=prCur;$("nomProy").textContent=p.numero;const c=p.cliente;
   $("pres").innerHTML=`<div class="pcont">
@@ -1093,7 +1093,7 @@ $("impOk").onclick=async()=>{const r=document.querySelector("[name=impP]:checked
   const n=prCur.partidas.length-antes;
   await avisar(`Añadidas o actualizadas ${Math.max(n,0)} partidas desde «${proy.nombre}».`+(sin.length?` Sin tarifa, añádelos a mano: ${sin.join(", ")}.`:"")+" Revisa cantidades y metros antes de enviarlo.")};
 // Hoja: ajustes de empresa, firma y tarifas
-function abrirAjustes(){const E=EMP;
+function abrirAjustes(){if(Nube.esTecnico()||Nube.verComo())return;const E=EMP;
   $("ajForm").innerHTML=`<div class="caja">${[["marca","Marca"],["lema","Lema (cabecera)"],["titular","Titular"],["nie","NIE (sale en el PDF)"],["localidad","Localidad"],["telefono","Teléfono"],["email","Email"],["web","Web"],["zona","Zona (desplazamiento incluido)"]].map(([k,l])=>`<label>${l}<input data-e="${k}" value="${esc(E[k]||"")}"></label>`).join("")}
    <div class="g2"><label>Validez (días)<input data-e="validez" type="number" value="${E.validez}"></label><label>Siguiente nº<input id="ajSig" type="number" value="${PR.sig}"></label></div>
    <small class="ayuda">El número se pone solo: el siguiente al más alto guardado del año, o este si es mayor.</small></div>
