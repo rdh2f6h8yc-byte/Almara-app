@@ -302,7 +302,7 @@ let fotosTmp=[],matTmp=[],firmaTmp=null;
 const EMP_DEF={marca:"ALMARA",lema:"Starlink · WiFi · Redes · Videovigilancia · Electricidad",titular:"Alin Florei",nie:"",localidad:"Calafell (Tarragona)",telefono:"623 916 122",email:"contacto@almara.group",web:"almara.group",firma:""};
 const empresa=()=>{try{return{...EMP_DEF,...JSON.parse(localStorage.getItem("almara-empresa-v1")||"{}")}}catch(e){return EMP_DEF}};
 function todosPartes(){const L=[];for(const c of db.clientes)for(const t of c.trabajos||[])L.push({c,t});return L}
-function siguienteParte(){const y=new Date().getFullYear();let mx=0;for(const {t} of todosPartes()){const m=/^PT-(\d{4})-(\d+)$/.exec(t.numero||"");if(m&&+m[1]===y)mx=Math.max(mx,+m[2])}return`PT-${y}-${String(mx+1).padStart(3,"0")}`}
+function siguienteParte(){const y=new Date().getFullYear(),se=Nube.serie();let mx=0;for(const {t} of todosPartes()){const m=/^PT-(\d{4})-([A-Z]*)(\d+)$/.exec(t.numero||"");if(m&&+m[1]===y&&m[2]===se)mx=Math.max(mx,+m[3])}return`PT-${y}-${se}${String(mx+1).padStart(3,"0")}`}
 function horas(a,b){if(!a||!b)return"";const[h1,m1]=a.split(":").map(Number),[h2,m2]=b.split(":").map(Number);let d=(h2*60+m2)-(h1*60+m1);if(d<0)d+=1440;const h=Math.floor(d/60),m=d%60;return h+" h"+(m?" "+m+" min":"")}
 function formTrabajo(t){const n=!t;t=t||{fecha:hoy(),clase:"Instalación",cat:"Starlink",fotos:[],estado:"terminado"};
   fotosTmp=(t.fotos||[]).slice();matTmp=(t.material||[]).map(x=>({...x}));firmaTmp=t.firmaCli?{png:t.firmaCli,nombre:t.firmaNombre||"",dni:t.firmaDni||"",fecha:t.firmadoEn||""}:null;
@@ -458,9 +458,9 @@ if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceW
   if(QP.get("vista")==="partes"){volverA="partes";ir("partes")}
   if(QP.get("parte")){volverA="partes";vista="partes";pintar();elegirClienteParte()}})();
 function refrescar(ch){if(!ch.length)return;cargar();if(cur){cur=db.clientes.find(c=>c.id===cur.id)||null;if(!cur)vista="lista"}if(!$("vForm").classList.contains("on"))pintar()}
-Nube.sincronizar(["clientes"]).then(refrescar);
+Nube.sincronizar(["clientes","empresa"]).then(refrescar);
 Nube.reintentarFotos(id=>IDB.get(id));
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")Nube.sincronizar(["clientes"]).then(refrescar)});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")Nube.sincronizar(["clientes","empresa"]).then(refrescar)});
 </script>
 </body>
 </html>
