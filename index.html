@@ -97,6 +97,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
       <a class="tile" href="/clientes/?vista=partes"><span class="ic" style="background:#F1E8F8">📝</span><b>Partes de trabajo</b><small id="nPar">Con firma del cliente</small></a>
       <a class="tile nuevo" href="/clientes/?parte=nuevo"><span class="ic" style="background:rgba(255,255,255,.14)">＋</span><b>Nuevo parte</b><small>Al terminar un trabajo</small></a>
       <a class="tile" id="tCon" href="/contactos/"><span class="ic" style="background:#E3F0FC">📨</span><b>Contactos web</b><small id="nCon">Peticiones de la web</small></a>
+      <a class="tile" id="tPros" href="/prospeccion/"><span class="ic" style="background:#FFF4D6">🎯</span><b>Prospección</b><small id="nPros">Empresas contactadas y leads</small></a>
       <a class="tile" id="tEst" href="/estadisticas/"><span class="ic" style="background:#E3F4EA">📊</span><b>Estadísticas</b><small>Cómo va el negocio</small></a>
       <a class="tile" href="/material/"><span class="ic" style="background:#FFF1E3">📦</span><b>Material</b><small id="nMat">Furgoneta e inventario</small></a>
     </div>
@@ -133,7 +134,8 @@ function estadoNube(){const e=Nube.estado();$("nubeTxt").innerHTML=Nube.configur
 function pintarInicio(){
   const h=new Date().getHours(),pf=Nube.perfil()||{},adm=Nube.esAdmin(),vc=Nube.verComo();
   $("saludo").textContent=vc?"Datos de "+vc.nombre:(h<13?"Buenos días":h<21?"Buenas tardes":"Buenas noches")+", "+(pf.nombre||"Alin");
-  $("tCon").hidden=$("tEst").hidden=!adm;$("bEquipo").hidden=!adm||!Nube.configurado();
+  $("tCon").hidden=$("tEst").hidden=$("tPros").hidden=!adm;$("bEquipo").hidden=!adm||!Nube.configurado();
+  if(adm)cargarPros();
   const cl=(lee("almara-clientes-v1")||{}).clientes||[],pl=(lee("almara-planos-v1")||{}).proy||[],pr=(lee("almara-pres-v1")||{}).lista||[];
   if(cl.length)$("nCli").textContent=cl.length+" cliente"+(cl.length>1?"s":"");
   if(pl.length)$("nPla").textContent=pl.length+" plano"+(pl.length>1?"s":"");
@@ -153,6 +155,11 @@ function pintarInicio(){
   const mh=av.map(a=>`<a href="/clientes/?id=${encodeURIComponent(a.c.id)}"><span>🔧 ${esc(a.c.nombre)} · ${a.t}</span><b style="color:${a.d<0?"var(--rojo)":"var(--nar)"};white-space:nowrap">${cuando(a.d)}</b></a>`);
   const todos=otros.concat(mh);$("avisos").innerHTML=todos.length?`<h3>🔔 Avisos</h3><div class="alerta">${todos.join("")}</div>`:"";
   estadoNube()}
+let prosHecho=false;
+function cargarPros(){if(prosHecho)return;prosHecho=true;
+  fetch("/data/prospeccion.json").then(r=>r.ok?r.json():null).then(d=>{const L=(d&&d.empresas)||[];if(!L.length)return;
+    const c=L.filter(e=>e.estado==="Contactado").length;
+    $("nPros").textContent=L.length+" empresa"+(L.length>1?"s":"")+(c?" · "+c+" contactada"+(c>1?"s":""):"")}).catch(()=>{})}
 $("verPass").onclick=()=>{const p=$("pass");p.type=p.type==="password"?"text":"password";$("verPass").textContent=p.type==="password"?"Ver":"Ocultar"};
 $("fAcceso").onsubmit=async e=>{e.preventDefault();$("error").textContent="";const b=$("bEntrar");
   if(!Nube.configurado()){localStorage.setItem(LOCAL,"1");mostrar();return}
