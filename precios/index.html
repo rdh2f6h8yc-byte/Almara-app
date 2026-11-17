@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#0B1F3A">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="icon" href="/icon-192.png">
+<link rel="stylesheet" href="/base.css">
+<title>Precios Obramat · ALMARA</title>
+<style>
+.banner{background:#FFF8EC;border:1px solid #F5D9AE;border-radius:12px;padding:12px;margin-bottom:10px;font-size:14px;line-height:1.45}
+.banner.ok{background:#E3F4EA;border-color:#BFE3CC}.banner.mal{background:#FDECEC;border-color:#F3C4C4}
+.pr{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--claro)}
+.pr:first-child{border-top:0}.pr b{font-size:14px;line-height:1.3}.pr small{color:var(--gris);font-size:12px;grid-column:1/-1}
+.pr .v{font-weight:800;font-size:15px;text-align:right;white-space:nowrap}.pr .v s{color:var(--gris);font-weight:600;font-size:12.5px;margin-right:4px}
+.viejo{color:var(--nar);font-weight:700}.sube{color:var(--rojo)}.baja{color:var(--verde)}
+.leido{border-top:1px solid var(--claro);padding:10px 0}.leido:first-child{border-top:0}
+.leido .top{display:flex;gap:10px;align-items:flex-start}.leido .top input[type=checkbox]{width:22px;height:22px;flex:none;margin:2px 0 0}
+.leido .n{flex:1;min-width:0;font-size:13.5px;line-height:1.35}.leido .n b{display:block;font-size:14px}
+.leido select{margin-top:6px;font-size:14px;padding:8px}.leido .g{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:end}
+.leido .g label{margin:4px 0 0}.leido .g input{padding:8px;font-size:15px;text-align:center}
+.paso{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--claro);font-size:14px;line-height:1.45}.paso:first-of-type{border-top:0}
+.paso .n{flex:none;width:24px;height:24px;border-radius:12px;background:var(--azul);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+pre{white-space:pre-wrap;word-break:break-all;font-size:11px;background:var(--claro);border-radius:10px;padding:10px;max-height:160px;overflow:auto;margin:8px 0 0}
+.edit{display:grid;grid-template-columns:1fr 70px 90px;gap:6px;align-items:end;margin-top:6px;grid-column:1/-1}
+.edit label{margin:0}.edit input{padding:8px;font-size:15px}
+</style>
+</head>
+<body>
+<header><a class="ib" href="/" id="bInicio">⌂</a><div class="tit"><small>ALMARA · OBRAMAT TARRAGONA <span id="nubeEst" style="color:#8FA3BC">☁︎</span></small><b>Precios Obramat</b></div><button class="ib" id="bAyuda" title="Configurar atajo">ⓘ</button></header>
+<main id="main"></main>
+<div class="velo" id="vAyuda"><div class="hoja"><h2>Atajo «Precio a ALMARA» <button class="x" data-cerrar>×</button></h2><div id="ayCuerpo"></div></div></div>
+<div id="aviso"></div>
+<script src="/config.js"></script><script src="/nube.js"></script><script src="/catalogo.js"></script>
+<script>
+"use strict";
+// Lo que llega del atajo (#d=...) se guarda antes de pedir sesión, para no perderlo al iniciar sesión
+(function(){const h=location.hash;if(h.startsWith("#d=")){try{localStorage.setItem("almara-obramat-pend",decodeURIComponent(h.slice(3)))}catch(e){}history.replaceState(null,"",location.pathname)}})();
+if(!Nube.requerir()||!Nube.soloAdmin())throw new Error("Solo el administrador");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const eur=v=>(Math.round(v*100)/100).toFixed(2).replace(".",",")+" €";
+const num=v=>parseFloat(String(v).replace(/\./g,"").replace(",","."));
+const numP=v=>{v=String(v).trim();return v.includes(",")?num(v):parseFloat(v)};
+const LST="almara-tarifas-v1",VIEJO=90*864e5,CAT=window.CATALOGO_OBRAMAT;
+function aviso(t,ms){const a=$("aviso");a.textContent=t;a.style.display="block";clearTimeout(aviso.t);aviso.t=setTimeout(()=>a.style.display="none",ms||2200)}
+let TOV={};
+const cargar=()=>{try{TOV=JSON.parse(localStorage.getItem(LST))||{}}catch(e){TOV={}}if(!TOV._obramat)TOV._obramat={}};
+const guardar=()=>{localStorage.setItem(LST,JSON.stringify(TOV));Nube.marcar("empresa")};
+const meta=id=>TOV._obramat[id]||{};
+const venta=it=>TOV[it.id]!==undefined?TOV[it.id]:it.p;
+const refDe=it=>meta(it.id).ref||it.ref||"";
+const udsDe=it=>meta(it.id).uds||it.uds||1;
+const fechaTxt=f=>f?new Date(f).toLocaleDateString("es-ES",{day:"numeric",month:"short",year:"numeric"}):"sin revisar";
+const viejo=it=>!meta(it.id).fecha||Date.now()-meta(it.id).fecha>VIEJO;
+// Parecido entre nombres, para sugerir a qué material corresponde un producto nuevo
+const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/mm2|mm²/g,"mm").replace(/(\d),(\d)/g,"$1.$2");
+const toks=s=>norm(s).split(/[^a-z0-9.+]+/).filter(t=>t.length>1&&!["de","para","serie","blanco","schneider","con","el","la","monoblock","monobloc","electric"].includes(t));
+function parecido(a,b){const A=new Set(toks(a)),B=toks(b);let s=0;for(const t of B)if(A.has(t))s+=/\d/.test(t)?2:1;return s}
+function udsSugeridas(n){const t=norm(n);let m=/^(\d+)\s+[a-z]/.exec(t);if(m&&+m[1]>1)return +m[1];m=/(rollo|bobina|corona)[^0-9]{0,12}(\d+)\s?m\b/.exec(t)||/(\d+)\s?m\b.*(rollo|bobina|corona)/.exec(t);if(m)return +(m[2]&&/\d/.test(m[2])?m[2]:m[1]);m=/\b(\d{2,3})\s?m\b/.exec(t);if(m&&/cable|tubo|corrugado/.test(t))return +m[1];return 1}
+
+// ---------- Precios leídos por el atajo ----------
+let LEIDO=null;
+function leerPendiente(){try{const t=localStorage.getItem("almara-obramat-pend");if(!t)return;const d=JSON.parse(t);if(d&&Array.isArray(d.p))LEIDO=d}catch(e){localStorage.removeItem("almara-obramat-pend")}}
+function filasLeidas(){
+  const porRef={};for(const it of CAT){const r=refDe(it);if(r)porRef[r]=it}
+  return LEIDO.p.map(x=>{const pvp=numP(x.pr);const it=porRef[x.ref]||null;const uds=it?udsDe(it):udsSugeridas(x.n);
+    const nueva=it&&pvp>0?ventaObramat(pvp,uds):null,antes=it?venta(it):null,cambio=antes&&nueva?(nueva-antes)/antes:0;
+    return{...x,pvp,it,uds,nueva,antes,cambio,raro:x.igic||!(pvp>0)||Math.abs(cambio)>.3}})}
+function pintarLeido(){
+  const F=filasLeidas(),con=F.filter(f=>f.it),sin=F.filter(f=>!f.it),cambian=con.filter(f=>Math.abs(f.nueva-f.antes)>=.005);
+  const alm=String(LEIDO.al||""),esTgn=/tarragona/i.test(alm);
+  let h=`<div class="banner ${esTgn?"ok":"mal"}">${esTgn?`✓ Leído en <b>${esc(alm)}</b>`:`⚠ No veo que la página fuera de <b>Obramat Tarragona</b>${alm?` (ponía «${esc(alm)}»)`:""}. Comprueba en la web que tienes elegido tu almacén antes de guardar.`}<br><small>${F.length} producto${F.length===1?"":"s"} leído${F.length===1?"":"s"} · ${new Date(LEIDO.t||Date.now()).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"})}</small></div>`;
+  if(con.length){h+=`<h3>De tu catálogo (${con.length}) <span class="mas" style="color:var(--gris)">${cambian.length} cambian</span></h3><div class="card">`;
+    for(const f of con){const d=f.nueva-f.antes,cls=d>.004?"sube":d<-.004?"baja":"";
+      h+=`<div class="leido"><div class="top"><input type="checkbox" data-ok="${esc(f.ref)}" ${f.raro?"":"checked"}><div class="n"><b>${esc(f.it.c)}</b>
+        Obramat ${eur(f.pvp)} con IVA${f.uds>1?` ÷ ${f.uds}`:""} → venta <b class="${cls}" style="display:inline">${eur(f.nueva)}</b> <span style="color:var(--gris)">(antes ${eur(f.antes)})</span>
+        ${f.igic?`<br><span class="sube">⚠ Precio con IGIC (Canarias): no lo uses.</span>`:Math.abs(f.cambio)>.3?`<br><span class="sube">⚠ Cambia más de un 30 %: revísalo antes de marcarlo.</span>`:""}</div></div></div>`}
+    h+=`</div>`}
+  if(sin.length){h+=`<h3>Productos nuevos (${sin.length})</h3><p style="font-size:13px;color:var(--gris);margin:-2px 2px 8px">Dime a qué material de tu catálogo corresponde cada uno. Solo hay que hacerlo la primera vez: después se reconoce solo.</p><div class="card">`;
+    for(const f of sin){const sug=CAT.map(it=>({it,s:parecido(it.c,f.n)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,3);
+      h+=`<div class="leido" data-nuevo="${esc(f.ref)}"><div class="n"><b>${esc(f.n||"Producto "+f.ref)}</b>${f.pvp>0?eur(f.pvp)+" con IVA":"sin precio"} · ref. ${esc(f.ref)}${f.igic?` <span class="sube">· IGIC</span>`:""}</div>
+        <div class="g"><label>Es en mi catálogo…<select data-enlace="${esc(f.ref)}"><option value="">— No lo uso —</option>${sug.length?`<optgroup label="Parecidos">${sug.map(x=>`<option value="${x.it.id}">★ ${esc(x.it.c)}</option>`).join("")}</optgroup>`:""}<optgroup label="Todo el catálogo">${CAT.map(it=>`<option value="${it.id}">${esc(it.c)}</option>`).join("")}</optgroup></select></label>
+        <label>Unidades<br>en el precio<input data-uds="${esc(f.ref)}" type="number" inputmode="numeric" min="1" value="${f.uds}"></label></div></div>`}
+    h+=`</div>`}
+  if(!F.length)h+=`<div class="vacio">No se ha leído ningún precio en esa página. Prueba con la página de un producto o con una lista de productos.</div>`;
+  h+=`<div class="fila2"><button class="btn" id="lDescartar">Descartar</button><button class="btn az" id="lGuardar">Guardar precios</button></div>`;
+  return h}
+function guardarLeido(){
+  const F=filasLeidas(),hoy=Date.now();let n=0,e=0;
+  for(const f of F){
+    if(f.it){const ok=document.querySelector(`[data-ok="${CSS.escape(f.ref)}"]`);if(ok&&ok.checked&&f.nueva>0&&!f.igic){TOV[f.it.id]=f.nueva;TOV._obramat[f.it.id]={...meta(f.it.id),ref:f.ref,uds:f.uds,pvp:f.pvp,fecha:hoy};n++}continue}
+    const sel=document.querySelector(`[data-enlace="${CSS.escape(f.ref)}"]`);if(!sel||!sel.value)continue;
+    const it=CAT.find(x=>x.id===sel.value),uds=Math.max(1,parseInt(document.querySelector(`[data-uds="${CSS.escape(f.ref)}"]`).value)||1);
+    const m={...meta(it.id),ref:f.ref,uds};
+    if(f.pvp>0&&!f.igic){TOV[it.id]=ventaObramat(f.pvp,uds);m.pvp=f.pvp;m.fecha=hoy;n++}TOV._obramat[it.id]=m;e++}
+  guardar();localStorage.removeItem("almara-obramat-pend");LEIDO=null;
+  aviso(n?`✓ ${n} precio${n===1?"":"s"} actualizado${n===1?"":"s"}`:e?"✓ Productos enlazados":"No se ha cambiado nada",2600);pintar()}
+
+// ---------- Catálogo ----------
+function pintar(){
+  cargar();const m=$("main");
+  if(LEIDO){m.innerHTML=pintarLeido();$("lDescartar").onclick=()=>{localStorage.removeItem("almara-obramat-pend");LEIDO=null;pintar()};$("lGuardar").onclick=guardarLeido;return}
+  const viejos=CAT.filter(viejo),enl=CAT.filter(refDe);
+  let h=viejos.length?`<div class="banner">🔄 <b>${viejos.length} de ${CAT.length}</b> precios tienen más de 3 meses o no se han revisado. Abre Obramat en Safari con tu almacén de Tarragona y usa el atajo <b>Compartir → Precio a ALMARA</b>.</div>`
+    :`<div class="banner ok">✓ Todos los precios de Obramat están revisados en los últimos 3 meses.</div>`;
+  if(!localStorage.getItem("almara-atajo-visto"))h+=`<button class="btn az" id="bConf" style="margin-bottom:10px">Configurar el atajo del iPhone (una vez)</button>`;
+  h+=`<h3>Catálogo <span class="mas" style="color:var(--gris)">${enl.length} enlazados con Obramat</span></h3><div class="card" id="lista">`;
+  for(const it of CAT){const mt=meta(it.id),r=refDe(it);
+    h+=`<div class="pr" data-id="${it.id}"><b>${esc(it.c)}</b><span class="v">${eur(venta(it))}</span>
+      <small>${mt.pvp?`Obramat ${eur(mt.pvp)} con IVA${udsDe(it)>1?" ÷ "+udsDe(it):""} · `:""}<span class="${viejo(it)?"viejo":""}">${fechaTxt(mt.fecha)}</span>${r?` · <a href="https://www.obramat.es/productos/${encodeURIComponent(r)}.html" target="_blank" style="color:var(--acento)">ver en Obramat</a>`:""} · <a href="#" data-edit="${it.id}" style="color:var(--acento)">cambiar a mano</a></small></div>`}
+  h+=`</div><p style="font-size:12.5px;color:var(--gris);margin:8px 2px">El precio de venta es el de Obramat sin IVA más tu 10 %. Fito usa estos mismos precios en sus presupuestos.</p>`;
+  m.innerHTML=h;if($("bConf"))$("bConf").onclick=abrirAyuda}
+$("main").addEventListener("click",e=>{const a=e.target.closest("[data-edit]");if(!a)return;e.preventDefault();
+  const it=CAT.find(x=>x.id===a.dataset.edit),row=a.closest(".pr");if(row.querySelector(".edit"))return;
+  const d=document.createElement("div");d.className="edit";
+  d.innerHTML=`<label>Precio Obramat con IVA<input inputmode="decimal" placeholder="ej. 4,26" value="${meta(it.id).pvp?String(meta(it.id).pvp).replace(".",","):""}"></label><label>Uds.<input type="number" inputmode="numeric" min="1" value="${udsDe(it)}"></label><button class="btn az" style="margin:0;padding:9px">Guardar</button>`;
+  row.appendChild(d);d.querySelector("input").focus();
+  d.querySelector("button").onclick=()=>{const [ip,iu]=d.querySelectorAll("input"),pvp=numP(ip.value),uds=Math.max(1,parseInt(iu.value)||1);
+    if(!(pvp>0)){aviso("Pon el precio con IVA, como sale en el ticket o en la web");return}
+    TOV[it.id]=ventaObramat(pvp,uds);TOV._obramat[it.id]={...meta(it.id),pvp,uds,fecha:Date.now()};guardar();aviso("✓ Guardado: venta "+eur(TOV[it.id]));pintar()}});
+
+// ---------- Instrucciones del atajo ----------
+function lector(){return `var APP=${JSON.stringify(location.origin+"/precios/")};
+var R=/([0-9][0-9.]*(?:,[0-9]{1,2})?)\\s*€\\s*(IVA|IGIC)/i,RF=/-(\\d{6,9})\\.html/,out={},lista=[];
+function ref(a){var m=RF.exec(a.getAttribute("href")||"");return m?m[1]:null}
+var h1=document.querySelector("h1"),m0=RF.exec(location.pathname);
+if(m0&&h1){var bt=document.body.innerText,i=bt.indexOf(h1.innerText.trim()),p=R.exec(i>=0?bt.slice(i):bt);if(p){out[m0[1]]=1;lista.push({ref:m0[1],n:h1.innerText.trim().slice(0,140),pr:p[1],igic:/IGIC/i.test(p[2])})}}
+var as=document.querySelectorAll('a[href*="/productos/"]');
+for(var k=0;k<as.length;k++){var a=as[k],r=ref(a);if(!r||out[r])continue;var el=a;
+ for(var j=0;j<8;j++){el=el.parentElement;if(!el)break;var rs={},ls=el.querySelectorAll('a[href*="/productos/"]'),c=0;for(var q=0;q<ls.length;q++){var x=ref(ls[q]);if(x&&!rs[x]){rs[x]=1;c++}}if(c>1)break;
+  var t=el.innerText||"",p2=R.exec(t);if(p2){var n="";for(var q2=0;q2<ls.length;q2++){var tx=(ls[q2].innerText||ls[q2].title||"").trim();if(tx.length>n.length)n=tx}
+   if(!n){var im=el.querySelector("img[alt]");if(im)n=im.alt}out[r]=1;lista.push({ref:r,n:n.replace(/\\s+/g," ").slice(0,140),pr:p2[1],igic:/IGIC/i.test(p2[2])});break}}}
+var hd=(document.querySelector("header")||document.body).innerText||"",al=(/Obramat\\s+[A-ZÁÉÍÓÚ][^\\n|]{2,28}/.exec(hd)||[""])[0].trim();
+completion(APP+"#d="+encodeURIComponent(JSON.stringify({t:Date.now(),u:location.href,al:al,p:lista.slice(0,80)})));`}
+function abrirAyuda(){localStorage.setItem("almara-atajo-visto","1");
+  $("ayCuerpo").innerHTML=`<p style="font-size:14px;line-height:1.45;margin:0 0 6px;color:var(--gris)">Con el atajo, tu iPhone lee los precios de la página de Obramat que estás viendo (con tu almacén de Tarragona elegido) y los trae aquí. Se configura una sola vez:</p>
+  <div class="paso"><span class="n">1</span><div>Abre la app <b>Atajos</b> → pestaña <b>Atajos</b> → <b>＋</b>. Arriba, ponle de nombre <b>Precio a ALMARA</b>.</div></div>
+  <div class="paso"><span class="n">2</span><div>Pulsa <b>ⓘ</b> (abajo o en el menú del nombre) y activa <b>Mostrar en hoja de compartir</b>. En «Tipos de hoja de compartir» deja solo <b>Páginas web de Safari</b>.</div></div>
+  <div class="paso"><span class="n">3</span><div>Añade la acción <b>Ejecutar JavaScript en la página web</b>. Borra el código que trae y pega este (botón de abajo):
+    <button class="btn az" id="bCopiar">📋 Copiar código</button><pre id="codigo"></pre></div></div>
+  <div class="paso"><span class="n">4</span><div>Añade la acción <b>Abrir URL</b> (debajo de la anterior). Tiene que coger el <b>Resultado de JavaScript</b>.</div></div>
+  <div class="paso"><span class="n">5</span><div>En <b>Ajustes del iPhone → Apps → Atajos → Avanzado</b>, activa <b>Permitir la ejecución de scripts</b>.</div></div>
+  <div class="paso"><span class="n">6</span><div><b>Para usarlo:</b> en Safari abre obramat.es con tu almacén <b>Tarragona</b> elegido, entra en un producto o una lista (por ejemplo «Mecanismos Asfora»), pulsa <b>Compartir → Precio a ALMARA</b>. Se abre esta pantalla con los precios para revisar y guardar.</div></div>
+  <p style="font-size:12.5px;color:var(--gris);margin:10px 0 0">La primera vez se abrirá en Safari y te pedirá entrar con tu correo y contraseña. Lo que guardes ahí llega a la app y a Fito.</p>`;
+  $("codigo").textContent=lector();
+  $("bCopiar").onclick=async()=>{try{await navigator.clipboard.writeText(lector());aviso("✓ Código copiado")}catch(e){const r=document.createRange();r.selectNodeContents($("codigo"));const s=getSelection();s.removeAllRanges();s.addRange(r);aviso("Mantén pulsado y copia")}};
+  $("vAyuda").classList.add("on")}
+$("bAyuda").onclick=abrirAyuda;
+$("vAyuda").addEventListener("click",e=>{if(e.target===$("vAyuda")||e.target.closest("[data-cerrar]"))$("vAyuda").classList.remove("on")});
+window.addEventListener("hashchange",()=>{const h=location.hash;if(h.startsWith("#d=")){localStorage.setItem("almara-obramat-pend",decodeURIComponent(h.slice(3)));history.replaceState(null,"",location.pathname);leerPendiente();pintar()}});
+
+leerPendiente();pintar();
+Nube.sincronizar(["empresa"]).then(ch=>{const e=$("nubeEst");if(e)e.textContent="☁︎ ✓";if(ch&&ch.length)pintar()}).catch(()=>{});
+</script>
+</body>
+</html>
