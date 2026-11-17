@@ -108,6 +108,9 @@ nav button.on{color:#fff;background:rgba(255,255,255,.14)}
 .barraTotal{position:sticky;bottom:0;background:var(--azul);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px calc(var(--sb) + 10px)}
 .barraTotal div{flex:1}.barraTotal small{display:block;font-size:11px;color:#B8C7DA}.barraTotal b{font-size:17px}
 .barraTotal .pb{background:#fff;color:var(--azul);padding:11px 20px;font-size:15px}
+.hoja label.iaF{display:grid;margin:0;font-size:inherit;color:var(--azul);font-weight:400;grid-template-columns:24px 1fr auto;gap:8px;align-items:start;padding:9px 0;border-top:1px solid var(--claro)}.hoja label.iaF:first-child{border-top:0}#iaTxt{display:block;width:100%;margin-top:6px;padding:12px;border:1px solid var(--borde);border-radius:10px;font:inherit;font-size:16px;resize:vertical}
+.iaF input{width:20px;height:20px;margin:2px 0 0}.iaF b{font-size:13.5px;display:block;line-height:1.3}.iaF small{color:var(--gris);font-size:11.5px;display:block}.iaF .imp{text-align:right;font-weight:700;font-size:13.5px;white-space:nowrap}
+.iaL{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.45}.iaQ{background:#FFF4E5;border-radius:10px;padding:8px 10px;margin-top:8px;font-size:13px}
 .ayuda{display:block;color:var(--gris);font-size:11.5px;margin-top:6px;line-height:1.35}
 .chk{display:flex!important;gap:8px;align-items:center;font-size:13px!important;margin-top:10px!important}
 .trow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--claro);font-size:12.5px}
@@ -171,6 +174,7 @@ nav button.on{color:#fff;background:rgba(255,255,255,.14)}
   <input id="dIn" style="width:100%;padding:11px;border:1px solid var(--borde);border-radius:10px;font:inherit;font-size:16px" autocomplete="off">
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="pb" id="dNo">Cancelar</button><button class="pb az" id="dOk">Aceptar</button></div>
 </div></div>
+<div class="velo" id="vIA"><div class="hoja"><h2>✨ Presupuesto con IA <button class="x" data-cerrar>×</button></h2><div id="iaCuerpo"></div></div></div>
 <div class="velo" id="vPart"><div class="hoja"><h2>Partida <button class="x" data-cerrar>×</button></h2><div id="partForm"></div>
   <div class="g2 bots"><button class="pb rojo" id="pfDel">Eliminar</button><button class="pb az" id="pfOk">Guardar</button></div></div></div>
 <div class="velo" id="vTar"><div class="hoja"><h2>Tarifa ALMARA <button class="x" data-cerrar>×</button></h2>
@@ -957,6 +961,7 @@ async function refrescarEnlaces(){if(!Nube.sesion()||!PR.lista.some(p=>p.enlace)
   if(ch){guardarPres();if(modo==="pres"){prCur?pintarEnlace():listaPres()}}}
 function listaPres(){prCur=null;const tot=p=>calcular(p).total;let h=`<div class="pcont">
   <button class="big az" data-pa="nuevo">＋ Nuevo presupuesto</button>
+  <button class="big" data-pa="nuevoIA">✨ Nuevo con IA<small>Cuenta o dicta el trabajo y te propone las partidas con tus tarifas</small></button>
   <button class="big" data-pa="nuevoPlano">▦ Nuevo desde un plano<small>Cuenta enchufes, luces, líneas y cable del plano y aplica tus tarifas</small></button>
   <h3>Presupuestos guardados</h3>`;
   if(!PR.lista.length)h+=`<p class="vacio">Todavía no hay presupuestos en este móvil.</p>`;
@@ -976,7 +981,7 @@ function editorPres(){const p=prCur;$("nomProy").textContent=p.numero;const c=p.
   <label>Dirección<input data-c="direccion" value="${esc(c.direccion)}"></label>
   <div class="g2"><label>Persona de contacto<input data-c="contacto" value="${esc(c.contacto)}"></label><label>Email<input data-c="email" inputmode="email" value="${esc(c.email)}"></label></div></div>
   <h3>Partidas</h3><div id="partidas"></div>
-  <div class="g2 bots"><button class="pb az" data-pa="tarifa">＋ De la tarifa</button><button class="pb" data-pa="plano">▦ Del plano</button><button class="pb" data-pa="libre">＋ Partida libre</button><button class="pb" data-pa="material">＋ Material (coste + margen)</button></div>
+  <div class="g2 bots"><button class="pb az" data-pa="tarifa">＋ De la tarifa</button><button class="pb" data-pa="ia">✨ Con IA</button><button class="pb" data-pa="plano">▦ Del plano</button><button class="pb" data-pa="libre">＋ Partida libre</button><button class="pb" data-pa="material">＋ Material (coste + margen)</button></div>
   <h3>Planos adjuntos al PDF</h3><div id="planosAdj"></div>
   <h3>Condiciones del trabajo</h3><div class="caja"><textarea data-f="notas" rows="4" placeholder="Una por línea">${esc(p.notas.join("\n"))}</textarea>
   <small class="ayuda">La validez de ${EMP.validez} días y el desplazamiento incluido ya salen siempre en el PDF.</small></div>
@@ -1012,6 +1017,8 @@ $("pres").addEventListener("click",async e=>{
   if(a==="enlace"){enviarEnlace();return}
   if(a==="copiarEnlace"){const u=location.origin+"/p/?c="+prCur.enlace.token;try{await navigator.clipboard.writeText(u);aviso("Enlace copiado",1500)}catch(e){await pedir("Copia el enlace:",u)}return}
   if(a==="nuevoPlano"){abrirImport(true);return}
+  if(a==="nuevoIA"){prCur=nuevoPres();editorPres();abrirIA();return}
+  if(a==="ia"){abrirIA();return}
   if(a==="volver"){listaPres();return}
   if(a==="ajustes"){abrirAjustes();return}
   if(a==="tarifa"){abrirTarifa();return}
@@ -1024,6 +1031,47 @@ $("pres").addEventListener("click",async e=>{
     aviso("Creando PDF…");try{const blob=await pdfPresupuesto(prCur);const nom=("Presupuesto_"+prCur.numero+(prCur.cliente.nombre?"_"+prCur.cliente.nombre:"")).replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"_")+".pdf";
       await compartir([new File([blob],nom,{type:"application/pdf"})])}catch(err){await avisar("No se ha podido crear el PDF")}aviso("");return}
 });
+
+// ---------- Presupuesto con IA (Claude Sonnet, función ia-presupuesto de Supabase) ----------
+let IAR=null;
+function abrirIA(){IAR=null;pintarIA();$("vIA").classList.add("on");setTimeout(()=>{const t=$("iaTxt");if(t)t.focus()},250)}
+function pintarIA(texto){const c=$("iaCuerpo");
+  c.innerHTML=`<label>¿Qué hay que hacer?<textarea id="iaTxt" rows="6" placeholder="Ej.: Cocina de un piso. 4 enchufes nuevos empotrados encima de la encimera, línea para el horno y la vitro, cambiar 3 interruptores viejos y un punto de luz conmutado en el pasillo.">${esc(texto||"")}</textarea></label>
+  <small class="ayuda">🎤 Puedes dictarlo con el micrófono del teclado. Cuanto más detalle (empotrado o no, si ya hay tubo, metros…), mejor.</small>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:600;font-size:14px;color:var(--azul)"><input type="checkbox" id="iaMat" checked style="width:20px;height:20px"> Incluir material (Schneider Asfora, Obramat)</label>
+  <button class="big az" id="iaIr" style="text-align:center">✨ Preparar partidas</button><div id="iaRes"></div>`;
+  $("iaIr").onclick=pedirIA}
+async function pedirIA(){const texto=$("iaTxt").value.trim(),res=$("iaRes");
+  if(texto.length<5){res.innerHTML=`<p class="iaQ">Cuenta un poco qué hay que hacer.</p>`;return}
+  if(!navigator.onLine){res.innerHTML=`<p class="iaQ">Hace falta conexión a internet.</p>`;return}
+  $("iaIr").disabled=true;$("iaIr").textContent="Pensando… (unos segundos)";res.innerHTML="";
+  const tarifa=TARIFA.map(t=>{const x=tar(t.id);return{id:t.id,g:t.g,c:t.c,d:t.d||"",precio:x.iva!==undefined?eur(x.iva)+" IVA incl.":eur(x.p)}});
+  try{const r=await Nube.funcion("ia-presupuesto",{texto,tipo:prCur.tipo,material:$("iaMat").checked,tarifa,actual:prCur.partidas.map(x=>({c:x.c,q:x.q}))});
+    IAR={...r,texto};mostrarIA()}
+  catch(e){res.innerHTML=`<p class="iaQ">No se ha podido preparar: ${esc(e.message||e)}</p>`}
+  finally{const b=$("iaIr");if(b){b.disabled=false;b.textContent="✨ Preparar partidas"}}}
+function filasIA(){return(IAR.partidas||[]).map((x,i)=>{const t=x.id?tar(x.id):null,q=Math.max(0,Math.round((+x.cantidad||0)*100)/100);
+  if(t){const tt={...t};if(x.descripcion&&(x.id==="e_min"||!t.d))tt.d=x.descripcion;const c=x.concepto&&x.id==="e_linea"?x.concepto:t.c;
+    const unit=t.iva!==undefined?t.iva:t.p*(prCur.tipo==="empresa"?1:1+IVA);return{i,ok:true,t:tt,c,q,unit,imp:unit*q,fuera:false}}
+  const p=+x.precio_sin_iva||0,unit=p*(prCur.tipo==="empresa"?1:1+IVA);return{i,ok:p>0&&!!x.concepto,c:x.concepto||"(sin concepto)",d:x.descripcion||"",q,p,unit,imp:unit*q,fuera:true}})}
+function mostrarIA(){const F=filasIA(),res=$("iaRes");let tot=0;
+  let h=`<h3 style="margin-top:14px">${esc(IAR.titulo||"Propuesta")}</h3><div class="caja" style="padding-top:4px;padding-bottom:4px">`;
+  for(const f of F){if(f.ok)tot+=f.imp;
+    h+=`<label class="iaF"><input type="checkbox" data-iaf="${f.i}" ${f.ok&&f.q>0?"checked":""} ${f.ok?"":"disabled"}><span><b>${esc(f.c)}</b><small>${String(f.q).replace(".",",")} × ${eur(f.unit)}${f.fuera?' · <span style="color:var(--nar,#E8730C);font-weight:700">fuera de tarifa: revisa el precio</span>':""}</small></span><span class="imp">${eur(f.imp)}</span></label>`}
+  h+=`</div><p style="text-align:right;font-weight:800;margin:6px 2px">Total aprox. ${eur(tot)}${prCur.tipo==="empresa"?" + IVA":" IVA incl."}</p>`;
+  if((IAR.preguntas||[]).length)h+=`<div class="iaQ"><b>Revisa:</b><ul class="iaL">${IAR.preguntas.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></div>`;
+  if((IAR.supuestos||[]).length)h+=`<details style="margin-top:8px"><summary style="font-size:13px;font-weight:700;color:var(--gris)">Lo que ha supuesto (${IAR.supuestos.length})</summary><ul class="iaL">${IAR.supuestos.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></details>`;
+  h+=`<div class="g2 bots" style="margin-top:12px"><button class="pb" id="iaOtra">✏️ Corregir y repetir</button><button class="pb az" id="iaAdd">Añadir al presupuesto</button></div>
+  <small class="ayuda">Los precios salen de tu tarifa. Después puedes cambiar cantidades o quitar partidas como siempre.</small>`;
+  res.innerHTML=h;
+  $("iaOtra").onclick=()=>{const t=IAR.texto;pintarIA(t);$("iaTxt").focus()};
+  $("iaAdd").onclick=()=>{const p=prCur;let n=0;
+    for(const f of F){const ch=document.querySelector(`[data-iaf="${f.i}"]`);if(!ch||!ch.checked||!f.ok||!(f.q>0))continue;
+      if(f.fuera)p.partidas.push({id:uid(),c:f.c,d:f.d,q:f.q,p:Math.round(f.p*100)/100});else agregar(p,f.t,f.q,f.c);n++}
+    if(!p.titulo&&IAR.titulo)p.titulo=IAR.titulo;
+    for(const nt of IAR.notas||[])if(nt&&!p.notas.includes(nt))p.notas.push(nt);
+    p.notas=p.notas.filter((x,i,a)=>x.trim()||i<a.length-1);
+    guardarPres();$("vIA").classList.remove("on");editorPres();aviso(n+" partida"+(n===1?"":"s")+" añadida"+(n===1?"":"s"),2000)}}
 // Hoja: editar partida
 function editarPartida(x,nueva,material){
   const v=$("vPart"),fijo=x.iva!==undefined&&x.iva!==null;
