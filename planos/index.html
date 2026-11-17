@@ -188,7 +188,7 @@ nav button.on{color:#fff;background:rgba(255,255,255,.14)}
 <div id="print"></div>
 
 <script src="/config.js"></script>
-<script src="/nube.js"></script>
+<script src="/nube.js"></script><script src="/catalogo.js"></script>
 <script src="/pdf.js"></script>
 <script>
 "use strict";
@@ -770,34 +770,7 @@ const TARIFA=[
  {id:"e_cuadro",g:"Electricidad · mano de obra",c:"Montaje o renovación de cuadro eléctrico",d:"Hasta 8 circuitos, conexionado y etiquetado",p:180},
  {id:"e_hora",g:"Electricidad · mano de obra",c:"Hora adicional, búsqueda de averías, imprevistos",p:35},
  {id:"e_min",g:"Electricidad · mano de obra",c:"Servicio mínimo de electricidad",p:50},
- {id:"m_int",g:"Material eléctrico (Obramat)",c:"Interruptor / conmutador Schneider Asfora blanco",p:3.12},
- {id:"m_dconm",g:"Material eléctrico (Obramat)",c:"Doble conmutador Schneider Asfora blanco",p:3.87},
- {id:"m_cruz",g:"Material eléctrico (Obramat)",c:"Cruzamiento Schneider Asfora blanco",p:3.07},
- {id:"m_puls",g:"Material eléctrico (Obramat)",c:"Pulsador Schneider Asfora blanco",p:2.67},
- {id:"m_pulsl",g:"Material eléctrico (Obramat)",c:"Pulsador luminoso Schneider Asfora blanco",p:5.67},
- {id:"m_pers",g:"Material eléctrico (Obramat)",c:"Interruptor de persiana Schneider Asfora blanco",p:7.21},
- {id:"m_ench",g:"Material eléctrico (Obramat)",c:"Enchufe schuko 16 A Schneider Asfora blanco",p:2.50},
- {id:"m_enchP",g:"Material eléctrico (Obramat)",c:"Enchufe schuko 16 A Schneider Asfora blanco (pack)",p:2.60},
- {id:"m_est",g:"Material eléctrico (Obramat)",c:"Enchufe doble estanco IP54 para exterior",p:7.59},
- {id:"m_rj45",g:"Material eléctrico (Obramat)",c:"Toma de datos RJ45 Cat6 Schneider Asfora blanco",p:7.15},
- {id:"m_tv",g:"Material eléctrico (Obramat)",c:"Toma TV-R-SAT final Schneider Asfora blanco",p:10.76},
- {id:"m_tvi",g:"Material eléctrico (Obramat)",c:"Toma TV-SAT intermedia Schneider Asfora blanco",p:15.66},
- {id:"m_tel",g:"Material eléctrico (Obramat)",c:"Toma de teléfono RJ12 Schneider Asfora blanco",p:3.35},
- {id:"m_ciega",g:"Material eléctrico (Obramat)",c:"Tapa ciega Schneider Asfora blanco",p:2.02},
- {id:"m_m2",g:"Material eléctrico (Obramat)",c:"Marco doble Schneider Asfora blanco",p:0.74},
- {id:"m_m3",g:"Material eléctrico (Obramat)",c:"Marco triple Schneider Asfora blanco",p:1.45},
- {id:"m_m4",g:"Material eléctrico (Obramat)",c:"Marco cuádruple Schneider Asfora blanco",p:2.62},
- {id:"m_mg16",g:"Material eléctrico (Obramat)",c:"Magnetotérmico Schneider Resi9 1P+N 16 A",p:3.80},
- {id:"m_mg25",g:"Material eléctrico (Obramat)",c:"Magnetotérmico Schneider Resi9 1P+N 25 A",p:3.85},
- {id:"m_c15",g:"Material eléctrico (Obramat)",c:"Cable libre de halógenos H07Z1-K 1,5 mm2 (metros)",p:0.28},
- {id:"m_c25",g:"Material eléctrico (Obramat)",c:"Cable libre de halógenos H07Z1-K 2,5 mm2 (metros)",p:0.45},
- {id:"m_c4",g:"Material eléctrico (Obramat)",c:"Cable libre de halógenos H07Z1-K 4 mm2 (metros)",p:0.97},
- {id:"m_c6",g:"Material eléctrico (Obramat)",c:"Cable libre de halógenos H07Z1-K 6 mm2 (metros)",p:1.41},
- {id:"m_t16",g:"Material eléctrico (Obramat)",c:"Tubo corrugado 16 mm (metros)",p:0.16},
- {id:"m_t20",g:"Material eléctrico (Obramat)",c:"Tubo corrugado 20 mm (metros)",p:0.25},
- {id:"m_t25",g:"Material eléctrico (Obramat)",c:"Tubo corrugado reforzado 25 mm (metros)",p:0.35},
- {id:"m_caja",g:"Material eléctrico (Obramat)",c:"Caja de mecanismo universal para empotrar",p:0.14},
- {id:"m_cajap",g:"Material eléctrico (Obramat)",c:"Caja de mecanismo para tabique hueco (pladur)",p:0.55},
+ ...window.CATALOGO_OBRAMAT,
  {id:"mant",g:"Mantenimiento",c:"Cuota de mantenimiento mensual",d:"Soporte remoto, respuesta en 4 h laborables, visita al siguiente día laborable, revisión anual y hasta 3 visitas al año",p:49},
  {id:"urg",g:"Mantenimiento",c:"Avería urgente sin contrato",d:"Primera hora incluida; después 35 €/h",p:95}
 ];
@@ -1100,7 +1073,7 @@ function abrirAjustes(){if(Nube.esTecnico()||Nube.verComo())return;const E=EMP;
    <h3>Firma</h3><div class="caja"><canvas id="firmaCv" width="600" height="220"></canvas>
    <div class="g2 bots"><button class="pb" id="fBorrar">Borrar</button><button class="pb" id="fSubir">Subir imagen</button></div><input type="file" id="fFile" accept="image/*" hidden>
    <small class="ayuda">Firma con el dedo en el recuadro. Se guarda solo en este móvil.</small></div>
-   <h3>Mis tarifas</h3><div class="caja">${TARIFA.map(t=>`<div class="trow"><span>${esc(t.c)}</span><input data-tov="${t.id}" type="number" inputmode="decimal" step="any" value="${TOV[t.id]??(t.iva!==undefined?t.iva:t.p)}"></div>`).join("")}
+   <h3>Mis tarifas</h3><a href="/precios/" class="big" style="display:block;text-align:center;margin:0 0 8px;text-decoration:none">🏷️ Actualizar precios de Obramat</a><div class="caja">${TARIFA.map(t=>`<div class="trow"><span>${esc(t.c)}</span><input data-tov="${t.id}" type="number" inputmode="decimal" step="any" value="${TOV[t.id]??(t.iva!==undefined?t.iva:t.p)}"></div>`).join("")}
    <small class="ayuda">Precios sin IVA, salvo Starlink (con IVA). Material eléctrico: precio de venta sin IVA (Obramat ÷ 1,21 × 1,10).</small></div>`;
   $("vAj").classList.add("on");firmaPad()}
 function firmaPad(){const cv=$("firmaCv"),cx=cv.getContext("2d");let dib=false,ult=null,cambiada=false;
