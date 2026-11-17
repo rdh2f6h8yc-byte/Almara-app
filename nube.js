@@ -232,6 +232,14 @@ window.Nube = (() => {
     if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text()).slice(0, 200));
     const t = await r.text(); return t ? JSON.parse(t) : null;
   }
+  // Funciones de Supabase (Edge Functions) con tu sesión, p. ej. la IA de presupuestos
+  async function funcion(nombre, cuerpo, ms = 90000) {
+    if (!configurado() || !sesion()) throw new Error("Hay que tener conexión e iniciar sesión");
+    const r = await pedir("/functions/v1/" + nombre, { method: "POST", body: JSON.stringify(cuerpo), headers: await cab({ "Content-Type": "application/json" }) }, ms);
+    const t = await r.text(); let j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
+    if (!r.ok) throw new Error((j && j.error) || ("Error " + r.status + (r.status === 404 ? ": falta crear la función «" + nombre + "» en Supabase" : "")));
+    return j;
+  }
   // Funciones públicas (sin sesión), para la página que ve el cliente
   async function rpcPublica(fn, args) {
     const r = await pedir("/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: KEY, "Content-Type": "application/json" }, body: JSON.stringify(args) }, 15000);
@@ -239,6 +247,6 @@ window.Nube = (() => {
     return r.json();
   }
   return { perfil, cargarPerfil, esAdmin, esTecnico, serie, ver, verComo, soloAdmin, equipo, datosEquipo, yo: () => sesion() && sesion().user.id,
-    api, rpcPublica, configurado, sesion, entrar, salir, requerir, marcar, sincronizar, subirFoto, bajarFoto, borrarFoto, reintentarFotos,
+    api, funcion, rpcPublica, configurado, sesion, entrar, salir, requerir, marcar, sincronizar, subirFoto, bajarFoto, borrarFoto, reintentarFotos,
     clientes, estado: () => est, CLAVES };
 })();
