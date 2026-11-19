@@ -1,5 +1,5 @@
 {
-  "actualizado": "2026-11-18",
+  "actualizado": "2026-11-19",
   "empresas": [
     {
       "id": "llamas-y-yurtas",
@@ -13,9 +13,9 @@
       "telefono": "684 19 44 10",
       "motivo": "Camping-masía aislado en una cresta, a 2,5 km del pueblo, con yurtas, parcelas y finca de 3 ha.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Contactado",
+      "estado": "Descartado",
       "fechaContacto": "2026-11-16",
-      "notas": "Su web indica expresamente «Wifi: en el bar del pueblo»: no ofrecen WiFi en la finca. El correo del 16/11/2026 rebotó (buzón lleno): contactar por teléfono."
+      "notas": "Su web indica expresamente «Wifi: en el bar del pueblo»: no ofrecen WiFi en la finca. El correo del 16/11/2026 rebotó (buzón lleno): contactar por teléfono. 19/11/2026: descartado por correo rebotado (16/11, buzón lleno). Si se quiere recuperar, solo por teléfono."
     },
     {
       "id": "mas-dineral",
@@ -125,9 +125,9 @@
       "telefono": "678 036 487",
       "motivo": "Bodega DO Terra Alta en el Camí de les Comes d'en Bonet s/n; visitas y paseos entre viñedos.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Contactado",
+      "estado": "Descartado",
       "fechaContacto": "2026-11-16",
-      "notas": "El 17/11/2026 Gmail avisó de un retraso temporal en la entrega a pepefuster@comadenbonet.com (seguirá reintentando); pendiente de confirmar si llega."
+      "notas": "El 17/11/2026 Gmail avisó de un retraso temporal en la entrega a pepefuster@comadenbonet.com (seguirá reintentando); pendiente de confirmar si llega. 19/11/2026: descartado. El correo a pepefuster@comadenbonet.com rebotó definitivamente tras 3 días de reintentos."
     },
     {
       "id": "mas-fullat",
@@ -413,9 +413,9 @@
       "telefono": "629 63 75 95",
       "motivo": "Casa rural restaurada en El Masroig, con estudios independientes y vínculo con visitas al Celler Masroig.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Contactado",
+      "estado": "Descartado",
       "fechaContacto": "2026-11-18",
-      "notas": "Casa de pueblo (Calle Mayor, 28). Prioridad menor que las fincas aisladas."
+      "notas": "Casa de pueblo (Calle Mayor, 28). Prioridad menor que las fincas aisladas. 19/11/2026: descartado. El correo del 18/11 rebotó: la dirección reservascalapubilla@gmail.com no existe."
     },
     {
       "id": "casa-pinol",
@@ -445,9 +445,9 @@
       "telefono": "673 450 651",
       "motivo": "Cámping familiar activo desde 2012 junto a la Vía Verde, con parcelas en terrazas, bungalows y mobilhomes.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Contactado",
+      "estado": "Interesado",
       "fechaContacto": "2026-11-18",
-      "notas": "Directorios de cámpings mencionan WiFi; no afirmar que no tienen conexión. Correo y teléfono publicados en el listado oficial de terra-alta.org."
+      "notas": "Directorios de cámpings mencionan WiFi; no afirmar que no tienen conexión. Correo y teléfono publicados en el listado oficial de terra-alta.org. 19/11/2026: respondió «podríamos valorarlo, es una de las cosas que estamos mirando de mejorar». Llamar al 673 450 651 para ver la instalación."
     },
     {
       "id": "celler-masroig",
