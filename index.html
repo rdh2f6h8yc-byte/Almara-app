@@ -128,6 +128,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris
       <a href="/planos/"><span class="ic" style="background:#FFF1E3">📐</span><span class="tx"><b>Planos</b><small id="nPla">Planos eléctricos</small></span><span class="fl"></span></a>
       <a href="/material/"><span class="ic" style="background:#FFF1E3">📦</span><span class="tx"><b>Material</b><small id="nMat">Furgoneta e inventario</small></span><span class="bd" id="bdMat" hidden></span><span class="fl"></span></a>
       <a id="tCon" href="/contactos/"><span class="ic" style="background:#E3F0FC">📨</span><span class="tx"><b>Contactos web</b><small id="nCon">Peticiones de la web</small></span><span class="bd" id="bdCon" hidden></span><span class="fl"></span></a>
+      <a id="tPros" href="/prospeccion/"><span class="ic" style="background:#FFF4D6">🎯</span><span class="tx"><b>Prospección</b><small id="nPros">Empresas contactadas y leads</small></span><span class="fl"></span></a>
       <a id="tEst" href="/estadisticas/"><span class="ic" style="background:#E3F4EA">📊</span><span class="tx"><b>Estadísticas</b><small>Cómo va el negocio</small></span><span class="fl"></span></a>
     </div>
     <h3>Tu empresa</h3>
@@ -170,10 +171,15 @@ function buscarIni(){const q=$("buscaIni").value.trim().toLowerCase(),r=$("resBu
   const L=CLI_INI.filter(c=>sin([c.nombre,c.contacto,c.tel,c.email,c.localidad,c.dir,c.nif].join(" ")).includes(qq)).slice(0,6);
   r.hidden=false;r.innerHTML=L.length?L.map(c=>`<a href="/clientes/?id=${encodeURIComponent(c.id)}"><span class="ic" style="background:#E3F0FC">👤</span><span class="tx"><b>${esc(c.nombre||"Sin nombre")}</b><small>${esc([c.localidad,c.tel].filter(Boolean).join(" · ")||"Ver ficha")}</small></span><span class="fl"></span></a>`).join("")
     :`<div class="vacio">Ningún cliente con «${esc($("buscaIni").value.trim())}».</div><a href="/clientes/?nuevo=1"><span class="ic" style="background:var(--azul);color:#fff">＋</span><span class="tx"><b>Crear cliente nuevo</b></span><span class="fl"></span></a>`}
+let prosHecho=false;
+function cargarPros(){if(prosHecho)return;prosHecho=true;
+  fetch("/data/prospeccion.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{const L=(d&&d.empresas)||[];if(!L.length)return;
+    const c=L.filter(e=>e.estado==="Contactado").length;
+    $("nPros").textContent=L.length+" empresa"+(L.length>1?"s":"")+(c?" · "+c+" contactada"+(c>1?"s":""):"")}).catch(()=>{})}
 function pintarInicio(){
   const h=new Date().getHours(),pf=Nube.perfil()||{},adm=Nube.esAdmin(),vc=Nube.verComo();
   $("saludo").textContent=vc?"Datos de "+vc.nombre:(h<13?"Buenos días":h<21?"Buenas tardes":"Buenas noches")+", "+(pf.nombre||"Alin");
-  $("tCon").hidden=$("tEst").hidden=$("tObr").hidden=!adm;$("bEquipo").hidden=!adm||!Nube.configurado();
+  $("tCon").hidden=$("tEst").hidden=$("tObr").hidden=$("tPros").hidden=!adm;if(adm)cargarPros();$("bEquipo").hidden=!adm||!Nube.configurado();
   const cl=(lee("almara-clientes-v1")||{}).clientes||[],pl=(lee("almara-planos-v1")||{}).proy||[],pr=(lee("almara-pres-v1")||{}).lista||[];
   if(cl.length)$("nCli").textContent=cl.length+" cliente"+(cl.length>1?"s":"");
   CLI_INI=cl;$("cajaBusca").hidden=!cl.length;if(!cl.length){$("resBusca").hidden=true;$("buscaIni").value=""}
