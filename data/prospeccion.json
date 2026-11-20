@@ -1,5 +1,5 @@
 {
-  "actualizado": "2026-11-19",
+  "actualizado": "2026-11-20",
   "empresas": [
     {
       "id": "llamas-y-yurtas",
@@ -701,9 +701,9 @@
       "telefono": "973 39 00 36",
       "motivo": "Empresa industrial (NIF A25057985) listada por el Ayuntamiento de Agramunt en el polígono Agramunt 2, Ctra. L-303 s/n.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Su web propia no respondió en la investigación; correo, teléfono y dirección salen del directorio municipal oficial. Conviene confirmar que el correo sigue activo."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Su web propia no respondió en la investigación; correo, teléfono y dirección salen del directorio municipal oficial. Conviene confirmar que el correo sigue activo. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "jove-balasch",
@@ -717,9 +717,9 @@
       "telefono": "973 39 25 39",
       "motivo": "Empresa industrial (NIF B25785510) listada por el Ayuntamiento de Agramunt en el Polígono Industrial Les Peixeres, Carrer Indústria 2-4.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "La web jovebalasch.com no respondió en la investigación; los datos salen del directorio municipal oficial. Confirmar que el correo sigue vigente."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "La web jovebalasch.com no respondió en la investigación; los datos salen del directorio municipal oficial. Confirmar que el correo sigue vigente. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "marbres-vilalta",
@@ -733,9 +733,9 @@
       "telefono": "973 39 11 83",
       "motivo": "Empresa industrial listada por el Ayuntamiento de Agramunt en el Polígono Industrial Les Peixeres, Carrer Indústria 1.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Correo y teléfono publicados en el directorio municipal oficial; no se ha localizado una web propia."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Correo y teléfono publicados en el directorio municipal oficial; no se ha localizado una web propia. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "disna",
@@ -781,9 +781,9 @@
       "telefono": "93 682 22 20",
       "motivo": "Fabricante de lubricantes industriales en C/ Comerç 36, Polígon industrial Can Sunyer, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. No hay señal pública de falta de fibra; el encaje es el respaldo y las redes de una nave."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. No hay señal pública de falta de fibra; el encaje es el respaldo y las redes de una nave. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "decoletaje-9002",
@@ -797,9 +797,9 @@
       "telefono": "93 682 41 00",
       "motivo": "Taller de decoletaje y mecanizado CNC con más de 50 años, en C/ Energía 39, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. Sin señal pública de falta de fibra."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. Sin señal pública de falta de fibra. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "foima",
@@ -813,9 +813,9 @@
       "telefono": "936 82 83 00",
       "motivo": "Fábrica de plataformas y equipos para el mercado automovilístico, en Carrer de Indústria 46, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. Sin señal pública de falta de fibra."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. Sin señal pública de falta de fibra. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "sct-straw",
@@ -829,9 +829,9 @@
       "telefono": "93 682 85 10",
       "motivo": "Especialistas en extrusión de plástico, en C/ Química 16-30, Polígono Can Sunyer, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. Sin señal pública de falta de fibra."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. Sin señal pública de falta de fibra. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "artesanos-de-envases-reciclados-calvo",
@@ -845,9 +845,9 @@
       "telefono": "936 82 38 39",
       "motivo": "Empresa de reciclaje de envases en Carrer de Indústria 68, Polígono industrial Nordeste, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. Sin señal pública de falta de fibra."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. Sin señal pública de falta de fibra. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "inenpre",
@@ -861,9 +861,9 @@
       "telefono": "93 653 16 52",
       "motivo": "Industria de engranajes de precisión en Can Sellarés 17, Pol. Ind. Can Sellarés, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. Sin señal pública de falta de fibra."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. Sin señal pública de falta de fibra. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "aqua-rifer",
@@ -877,9 +877,9 @@
       "telefono": "93 314 36 72 / 629 129 783",
       "motivo": "Fabricación y venta de agua destilada, desionizada y purificada, en C/ Granada 21-23, Sant Andreu de la Barca.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Área metropolitana. Sin señal pública de falta de fibra."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Área metropolitana. Sin señal pública de falta de fibra. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "lilla-benissanet",
@@ -1213,9 +1213,9 @@
       "telefono": "977 265 253",
       "motivo": "Albergue de 48 plazas y masos en una finca de frutales y olivos en medio del meandro más grande del Ebro, con embarcadero propio.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "camping-riba-roja",
@@ -1229,9 +1229,9 @@
       "telefono": "977 265 083",
       "motivo": "Camping pequeño y familiar junto al Ebro, en la Ctra. TV-7411 del embalse de Riba-roja, km 6.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "lo-maset-de-carmeta",
@@ -1245,9 +1245,9 @@
       "telefono": "626 853 264",
       "motivo": "Casa rural en la Ctra. T-301 a 1,2 km de Tivenys, marcada como aislada en la ficha oficial de Terres de l'Ebre.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "mas-auguero",
@@ -1261,9 +1261,9 @@
       "telefono": "608 438 245",
       "motivo": "Casa de piedra restaurada en el Camí Vall de Vinyes, a las afueras de Paüls, puerta de Els Ports.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "masia-sagues",
@@ -1277,9 +1277,9 @@
       "telefono": "659 37 49 40",
       "motivo": "Masía del s. XIX con apartamentos rurales y restaurante en la T-700 km 4-5, en pleno Paratge Natural de Poblet.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Ya anuncian WiFi gratuito: enfocar Starlink como mejora o respaldo. Correo del restaurante: masiasagues.info@gmail.com."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Ya anuncian WiFi gratuito: enfocar Starlink como mejora o respaldo. Correo del restaurante: masiasagues.info@gmail.com. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "chemiprats",
@@ -1293,9 +1293,9 @@
       "telefono": "977 54 69 82 / 977 55 03 99",
       "motivo": "Amplía su centro logístico de Perafort (25.000 m²) con una nave nueva de 5.000 m² en construcción (Tarragona Empresarial, 11/08/2026).",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "El correo publicado es el de Transportes Prats."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "El correo publicado es el de Transportes Prats. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "aqua-resmat",
@@ -1309,9 +1309,9 @@
       "telefono": "938 305 016",
       "motivo": "Sede nueva de 13.000 m² en el polígono Plans de la Sala, inaugurada en febrero de 2026 con una inversión de 7 M€.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "grup-solucions",
@@ -1325,9 +1325,9 @@
       "telefono": "93 876 81 37",
       "motivo": "Nave nueva de 600 m² construida desde cero en el polígono Carretera de Berga II, inaugurada en junio de 2026.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "fragrance-science",
@@ -1341,9 +1341,9 @@
       "telefono": "937 75 72 06",
       "motivo": "Traslado a una nave nueva de 23.000 m² en el polígono Can Parera, inaugurada en mayo de 2026 (16 M€).",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "hife-la-seu",
@@ -1373,9 +1373,9 @@
       "telefono": "623 245 956",
       "motivo": "Masía de piedra rehabilitada a 3 km de Horta de Sant Joan, en plena naturaleza junto al Parc Natural dels Ports; centro de retiros con sala de actividades y alojamientos.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "mas-de-les-olles",
@@ -1389,9 +1389,9 @@
       "telefono": "667 631 304 / 670 293 890",
       "motivo": "Casa rural junto al río Canaletes, a 50 m de los baños de Les Olles, en el Parque Natural de Els Ports; 6 plazas con piscina.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "mas-den-cholvi",
@@ -1405,9 +1405,9 @@
       "telefono": "649 968 303",
       "motivo": "Masía en una pequeña finca ecológica (Partida Mas de Sentís-Mas de Javier) en el Parc Natural dels Ports, con piscina, jardín y senderos entre pinos y olivos.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "La ficha de catalunya.com indica también carmen@masiacholvi.com."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "La ficha de catalunya.com indica también carmen@masiacholvi.com. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "camping-prades-park",
@@ -1421,9 +1421,9 @@
       "telefono": "977 868 270",
       "motivo": "Cámping de montaña en la Ctra. T-701 km 6,85, en el corazón de las Muntanyes de Prades, con 80 parcelas, bungalows y spa.",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "mas-alsera",
@@ -1437,9 +1437,9 @@
       "telefono": "620 122 842 / 620 122 857 / 977 185 351",
       "motivo": "Masía de agroturismo de 1865 en el centro de la finca Alsera, entre viñas y olivos junto al río Siurana, a 1 km de Torroja (km 4 de la T-711).",
       "servicio": "Starlink desde 175 €",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "vencafesa-tarragona",
@@ -1453,9 +1453,9 @@
       "telefono": "932 66 08 50",
       "motivo": "Abre nueva delegación y centro logístico en una nave del Polígono Riu Clar (c/ del Carbó, 6), anunciado el 12/11/2026.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "Correo y teléfono publicados son los de la sede central de Badalona."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "Correo y teléfono publicados son los de la sede central de Badalona. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "spt-logistic",
@@ -1469,9 +1469,9 @@
       "telefono": "937 869 176",
       "motivo": "Nueva nave de 9.000 m² de almacén y oficinas para químicos de alto riesgo en Sant Fruitós de Bages, prácticamente lista según su web (28/10/2026).",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "grup-boix",
@@ -1485,9 +1485,9 @@
       "telefono": "938 290 900",
       "motivo": "Inauguró el 17/10/2026 su nueva planta de CLT de 13.000 m² (40 M€) en el Polígon El Saltet de Puig-reig, con procesos digitalizados.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "autoflotas",
@@ -1501,9 +1501,9 @@
       "telefono": "938 68 08 79",
       "motivo": "Nueva terminal ferroviaria inaugurada el 17/09/2026 en sus instalaciones del polígono Les Garrigues de Calaf (Ajuntament de Calaf).",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": ""
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "ros-roca",
@@ -1517,9 +1517,9 @@
       "telefono": "973 508 100",
       "motivo": "Nueva planta de producción en Tàrrega con dos naves (soldadura y pintura) de 10.000 m², terminada por Romero Polo en octubre de 2025.",
       "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
-      "estado": "Sin contactar",
-      "fechaContacto": "",
-      "notas": "En la web aparecen también contactos comerciales por zona."
+      "estado": "Contactado",
+      "fechaContacto": "2026-11-19",
+      "notas": "En la web aparecen también contactos comerciales por zona. 20/11/2026: correo enviado el 19/11/2026."
     },
     {
       "id": "orri-del-pallars",
@@ -3120,6 +3120,166 @@
       "estado": "Borrador en Gmail",
       "fechaContacto": "",
       "notas": "Borrador creado 2026-11-19."
+    },
+    {
+      "id": "cal-colomina",
+      "nombre": "Cal Colomina",
+      "segmento": "Rural",
+      "provincia": "Lleida",
+      "localidad": "Folquer (Artesa de Segre)",
+      "comarca": "Noguera",
+      "web": "https://www.calcolomina.com",
+      "email": "info@calcolomina.com",
+      "telefono": "616 99 48 64",
+      "motivo": "Su ficha avisa: «la casa rural está en una zona donde hay poca cobertura de Internet y telefonía móvil». Masía para 10 personas con jardín y piscina.",
+      "servicio": "Starlink desde 175 € + WiFi mesh",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20. Aviso de poca cobertura en su ficha de casasrurales.net; correo y teléfonos (616 99 48 64 / 973 40 03 22) en su web."
+    },
+    {
+      "id": "casa-susterris",
+      "nombre": "Casa Susterris",
+      "segmento": "Rural",
+      "provincia": "Lleida",
+      "localidad": "Tremp",
+      "comarca": "Pallars Jussà",
+      "web": "https://casasusterris.com",
+      "email": "info@casasusterris.com",
+      "telefono": "666 533 581",
+      "motivo": "Casa de 301 m² con piscina privada y jardín de 10.000 m² junto al lago de Sant Antoni: WiFi exterior/mesh para cubrir todo el recinto.",
+      "servicio": "Starlink desde 175 € + WiFi mesh",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20. Ya anuncian WiFi gratuito: enfocar a WiFi mesh exterior y Starlink como respaldo. A 5 min de Tremp."
+    },
+    {
+      "id": "masia-els-arquells",
+      "nombre": "Masia Els Arquells",
+      "segmento": "Rural",
+      "provincia": "Lleida",
+      "localidad": "Oliola",
+      "comarca": "Noguera",
+      "web": "https://masiaarquells.com",
+      "email": "info@masiaarquells.com",
+      "telefono": "699 673 745",
+      "motivo": "Finca histórica entre Agramunt y Coscó que organiza bodas, reuniones y eventos al aire libre: WiFi exterior para celebraciones.",
+      "servicio": "Starlink desde 175 € + WiFi exterior",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20."
+    },
+    {
+      "id": "masia-llorenc",
+      "nombre": "Masia Llorenç",
+      "segmento": "Rural",
+      "provincia": "Lleida",
+      "localidad": "Biosca",
+      "comarca": "Segarra",
+      "web": "https://masiallorens.com",
+      "email": "info@masiallorens.com",
+      "telefono": "649 819 839",
+      "motivo": "Finca aislada de 20 hectáreas rodeada de bosque, apartamentos para 40-50 personas y bodas.",
+      "servicio": "Starlink desde 175 € + WiFi mesh/exterior",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20. Contacto: Rafa (649 819 839)."
+    },
+    {
+      "id": "les-illes-montseny",
+      "nombre": "Càmping i cases rurals Les Illes",
+      "segmento": "Rural",
+      "provincia": "Barcelona",
+      "localidad": "Montseny",
+      "comarca": "Vallès Oriental",
+      "web": "https://lesillesmontseny.es",
+      "email": "",
+      "telefono": "690 121 664",
+      "motivo": "Su web dice: «La cobertura móvil es limitada», y piden contactar por WhatsApp. Camping y casas rurales en el corazón del Montseny.",
+      "servicio": "Starlink desde 175 € + WiFi mesh",
+      "estado": "Sin contactar",
+      "fechaContacto": "",
+      "notas": "20/11/2026: Llamar. La web no publica correo; teléfono/WhatsApp 690 121 664. Municipio exacto por confirmar."
+    },
+    {
+      "id": "murallatrans",
+      "nombre": "Murallatrans",
+      "segmento": "Naves y polígonos",
+      "provincia": "Barcelona",
+      "localidad": "Vic",
+      "comarca": "Osona",
+      "web": "https://www.murallatrans.com",
+      "email": "murallatrans@murallatrans.com",
+      "telefono": "938 86 02 08",
+      "motivo": "Adquirió una nueva nave en Vic en marzo de 2026 con préstamo del ICF (VIA Empresa, 16/04/2026). Empresa de transporte y logística del Polígon Malloles.",
+      "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20."
+    },
+    {
+      "id": "cape-manlleu",
+      "nombre": "CAPE (Mecànica Cape)",
+      "segmento": "Naves y polígonos",
+      "provincia": "Barcelona",
+      "localidad": "Manlleu",
+      "comarca": "Osona",
+      "web": "https://cape.es",
+      "email": "cape@cape.es",
+      "telefono": "93 851 14 30",
+      "motivo": "Está construyendo una nueva nave de 5.000 m² en Manlleu (Nació Digital, Premis Cambra Osona, 17/11/2026). Polígon El Verdaguer.",
+      "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20."
+    },
+    {
+      "id": "controlpack",
+      "nombre": "Control Pack",
+      "segmento": "Naves y polígonos",
+      "provincia": "Tarragona",
+      "localidad": "La Sénia",
+      "comarca": "Montsià",
+      "web": "https://www.controlpack.com",
+      "email": "controlpack@controlpack.com",
+      "telefono": "977 713 562",
+      "motivo": "Compró las antiguas naves de Antaix para una nueva planta de 40.000 m² con almacén automático (Consell Comarcal del Montsià, 22/11/2025; inversión 15 M€).",
+      "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20."
+    },
+    {
+      "id": "grans-del-llucanes",
+      "nombre": "Grans del Lluçanès",
+      "segmento": "Naves y polígonos",
+      "provincia": "Barcelona",
+      "localidad": "Sant Martí d'Albars",
+      "comarca": "Lluçanès",
+      "web": "https://www.gransllusanes.com",
+      "email": "info@gransllusanes.com",
+      "telefono": "93 812 90 11",
+      "motivo": "Proyecta una nueva nave de 2.340 m², ampliaciones y silos de 18 m en Sant Martí d'Albars, 2,1 M€ (revista La Rella, oct. 2026). Zona rural.",
+      "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
+      "estado": "Borrador en Gmail",
+      "fechaContacto": "",
+      "notas": "Borrador creado 2026-11-20."
+    },
+    {
+      "id": "nedschroef-constanti",
+      "nombre": "Nedschroef (Constantí)",
+      "segmento": "Naves y polígonos",
+      "provincia": "Tarragona",
+      "localidad": "Constantí",
+      "comarca": "Tarragonès",
+      "web": "https://www.nedschroef.com",
+      "email": "",
+      "telefono": "934 770 606",
+      "motivo": "Nave logística de 22.400 m² alquilada a GLP en Constantí, con 28 muelles, inaugurada en 2024 (Diari de Tarragona / Forcadell).",
+      "servicio": "Starlink desde 249 € + redes/WiFi/CCTV",
+      "estado": "Sin contactar",
+      "fechaContacto": "",
+      "notas": "20/11/2026: Llamar. La web no publica correo; teléfono +34 934 770 606 (Carrer d'Europa, 1, Constantí). Multinacional: preguntar por facilities/IT."
     }
   ]
 }
